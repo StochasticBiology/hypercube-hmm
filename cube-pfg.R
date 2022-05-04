@@ -6,9 +6,7 @@ library(ggraph)
 library(gridExtra)
 library(igraph)
 
-#for(expt in 1:3)
-expt = 4
-{
+for(expt in 1:4) {
   use.width = T           # use line width to display edge weights?
   duplicate.offset = 0.   # vertical offset for nodes in identical positions
   lab.size = 3
