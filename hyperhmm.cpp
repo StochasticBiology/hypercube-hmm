@@ -1187,14 +1187,10 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
     sd.slice(0) = rw;
 
 
-    for(int i=0; i<n_boot-1; i++){
+    for(int i=0; i<n_boot; i++){
         cout << "Bootstrap number: " << i+1 << "\n";
         vector<string> new_data = data;
-	if(i > 0) {
-          bootstrap(data, new_data);
-	} else {
-	  new_data = data;
-	}
+        bootstrap(data, new_data);
         unique_and_count(new_data, data_unique, data_count);
         add_questionmarks(data_unique, L, new_data);
 
@@ -1272,15 +1268,10 @@ void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::
     cout << rw << endl;
     mean.slice(0) = rw;;
     sd.slice(0) = rw;
-    for(int i=0; i<n_boot-1; i++){
+    for(int i=0; i<n_boot; i++){
 
         cout << "Bootstrap number: " << i+1 << "\n";
         vector<string> new_data = data;
-	if(i > 0) {
-          bootstrap(data, new_data);
-	} else {
-	  new_data = data;
-	}
         bootstrap2(data, new_data, L);
 
         arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
@@ -1365,7 +1356,7 @@ int main(int argc, char** argv){
 
     double time;
 
-    if(argc != 6 || (atoi(argv[5]) != 0 && atoi(argv[5]) != 1) || atoi(argv[2]) <= 0 || atoi(argv[3]) <= 0) {
+    if(argc != 6 || (atoi(argv[5]) != 0 && atoi(argv[5]) != 1) || atoi(argv[2]) <= 0 || atoi(argv[3]) < 0) {
       cout << "Usage:\n\t./hyperhmm.ce [datafile] [number of features] [number of bootstrap resamples] [output file label] [cross-sectional data (0 or 1)]\n";
       return 1;
     }
