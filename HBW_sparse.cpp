@@ -1175,7 +1175,7 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
     uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
     auto t1 = std::chrono::high_resolution_clock::now();
     adapted_baum_welch(A_val, A_row_ptr, A_col_idx, data_bw, data_count, 1000, pow(10, -3), L, false, false);
-    //graph_visualization("graph_viz_trash", 100, A_val, A_row_ptr, A_col_idx, L);
+    graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
     auto t2 = std::chrono::high_resolution_clock::now();
     double duration_seconds = std::chrono::duration<double>(t2 - t1).count(); //Measure time
     time += duration_seconds;
@@ -1187,7 +1187,7 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
     sd.slice(0) = rw;
 
 
-    for(int i=0; i<n_boot-1; i++){
+    for(int i=0; i<n_boot; i++){
         cout << "Bootstrap number: " << i+1 << "\n";
         vector<string> new_data = data;
         bootstrap(data, new_data);
@@ -1205,11 +1205,11 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
         auto t4 = std::chrono::high_resolution_clock::now();
         double duration_seconds2 = std::chrono::duration<double>(t4 - t3).count(); //Measure time
         time += duration_seconds;
-        arma::mat rw(L,L, arma::fill::zeros);
-        random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
-        cout << rw << endl;
-        mean.slice(i+1) = rw;
-        sd.slice(i+1) = rw;
+        //If you want the bootstrap results for the summary plots: Uncomment the next four lines
+        //arma::mat rw(L,L, arma::fill::zeros);
+        //random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
+        //mean.slice(i+1) = rw;
+        //sd.slice(i+1) = rw;
     }
 
     arma::mat mean_slices(L,L, arma::fill::zeros);
@@ -1264,11 +1264,11 @@ void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::
     time += duration_seconds;
     arma::mat rw(L,L, arma::fill::zeros);
     random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
-    //graph_visualization("graph_viz_tb_drug", 10000, A_val, A_row_ptr, A_col_idx, L);
+    graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
     cout << rw << endl;
     mean.slice(0) = rw;;
     sd.slice(0) = rw;
-    for(int i=0; i<n_boot-1; i++){
+    for(int i=0; i<n_boot; i++){
 
         cout << "Bootstrap number: " << i+1 << "\n";
         vector<string> new_data = data;
@@ -1283,11 +1283,11 @@ void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::
         auto t4 = std::chrono::high_resolution_clock::now();
         double duration_seconds2 = std::chrono::duration<double>(t4 - t3).count(); //Measure time
         time += duration_seconds2;
-        arma::mat rw(L,L, arma::fill::zeros);
-        random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
-        cout << rw << endl;
-        mean.slice(i+1) = rw;
-        sd.slice(i+1) = rw;
+        //If you want the bootstrap results for the summary plots: Uncomment the next four lines
+        //arma::mat rw(L,L, arma::fill::zeros);
+        //random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
+        //mean.slice(i+1) = rw;
+        //sd.slice(i+1) = rw;
     }
 
     arma::mat mean_slices(L,L, arma::fill::zeros);
@@ -1350,21 +1350,31 @@ If you just want the maximum likelihood results set number_bootstrap = 1. If you
 */
 int main(int argc, char** argv){
 
-    int L = atoi(argv[2]);
-    int n_boot = atoi(argv[3]);
+int L;
+int n_boot;
 
 
-    arma::cube mean(L,L,n_boot,arma::fill::zeros);
-    arma::cube sd(L,L,n_boot,arma::fill::zeros);
+double time;
 
-    double time;
+if(argc != 6 || (atoi(argv[5]) != 0 && atoi(argv[5]) != 1) || atoi(argv[2]) <= 0 || atoi(argv[3]) < 0) {
+    cout << "Usage:\n\t./hyperhmm.ce [datafile] [number of features] [number of bootstrap resamples] [output file label] [cross-sectional data (0 or 1)]\n";
+    return 1;
+}
 
-    if(argc < 6 || atoi(argv[5]) == 1){
-        do_bootstrap(argv[1], n_boot, L, mean, sd, argv[4], time);
-    }
-    else if(atoi(argv[5]) == 0){
-        do_bootstrap2(argv[1], n_boot, L, mean, sd, argv[4], time);
-    }
+L = atoi(argv[2]);
+n_boot = atoi(argv[3]);
 
-    cout << "The time it took to run the algorithm with " << n_boot << " bootstrap(s): " << time << endl;
+arma::cube mean(L,L,n_boot,arma::fill::zeros);
+arma::cube sd(L,L,n_boot,arma::fill::zeros);
+
+
+if(atoi(argv[5]) == 1){
+    do_bootstrap(argv[1], n_boot, L, mean, sd, argv[4], time);
+}
+else if(atoi(argv[5]) == 0){
+    do_bootstrap2(argv[1], n_boot, L, mean, sd, argv[4], time);
+}
+
+cout << "The time it took to run the algorithm with " << n_boot << " bootstrap(s): " << time << endl;
+return 0;
 }
