@@ -1276,6 +1276,11 @@ void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::
 
         cout << "Bootstrap number: " << i+1 << "\n";
         vector<string> new_data = data;
+	if(i > 0) {
+          bootstrap(data, new_data);
+	} else {
+	  new_data = data;
+	}
         bootstrap2(data, new_data, L);
 
         arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
