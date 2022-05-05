@@ -333,16 +333,6 @@ void forward_prob(arma::mat& alpha, arma::vec A_val, arma::vec A_row_ptr, arma::
                     tmp += alpha(t-1,cor_row[start_idx+j])*A_val(j2);
                 }
                 alpha(t,i2) = tmp;
-                /*
-                if(alpha(t,i2)==0){
-                    cout << "alpha(t,i2): " << alpha(t,i2) << endl;
-                    cout << t << " " << i2 << endl;
-                    for(int g=0; g<O.size();g++){
-                        cout << O[g] << endl;
-                    }
-                    exit (EXIT_FAILURE);
-                }
-                */
             }
         }else{ //If the state is not '?' it is known.
             string s = O[t];
@@ -353,6 +343,7 @@ void forward_prob(arma::mat& alpha, arma::vec A_val, arma::vec A_row_ptr, arma::
                 int j2 = from[start_idx+j];
                 alpha(t, state) += alpha(t-1,cor_row[start_idx+j])*A_val(j2);
             }
+            /*
             if(alpha(t,state)==0){
                 cout << "alpha(t,state): " << alpha(t,state) << endl;
                 cout << t << " " << s << endl;
@@ -362,18 +353,6 @@ void forward_prob(arma::mat& alpha, arma::vec A_val, arma::vec A_row_ptr, arma::
                 int start_idx = c_from[state];
                 for(int j=0; j<n_from[state]; j++){
                     int j2 = from[start_idx+j];
-                    cout << "alpha(t-1,cor_row[start_idx+j]): " << alpha(t-1,cor_row[start_idx+j]) << endl;
-                    cout << "cor_row[start_idx+j] " << cor_row[start_idx+j] << endl;
-                    cout << "A_val(j2): " << A_val(j2) << endl;
-                }
-                exit (EXIT_FAILURE);
-            }
-            //cout << "Obs = " << time << " Value = " << alpha(t, state) << endl;
-            /*
-            if(isnan(alpha(t, state))){
-                cout << "alpha(t, state): " << t << " state: " << state << endl;
-                for(int g=0; g<O.size();g++){
-                    cout << O[g] << endl;
                 }
             }
             */
@@ -499,10 +478,6 @@ void ksi_prob(arma::vec& ksi, arma::mat alpha, arma::mat beta, arma::vec A_val, 
                 idx ++;
             }
             ksi(idx) += n_O * 1;
-            if(isnan(ksi(idx))){
-                cout << "ksi(idx): " << ksi(idx) << endl;
-                exit (EXIT_FAILURE);
-            }
         }
         else if(time_i.length() > T-3){ //Check if the first observation is known.
             int i = binary2int(time_i, T-1);
@@ -510,17 +485,6 @@ void ksi_prob(arma::vec& ksi, arma::mat alpha, arma::mat beta, arma::vec A_val, 
             prod = prod1 * alpha(t,i);
             for(int j = A_row_ptr[i]; j<A_row_ptr[i+1]; j++){
                 ksi(j) += A_val(j)*beta(t+1,A_col_idx(j)) * prod;
-                if(isnan(ksi(j))){
-                    cout << "ksi(j): " << ksi(j) << endl;
-                    cout << "prob_obs: " << prob_obs << endl;
-                    cout << "n_o: " << n_O << endl;
-                    cout << "alpha(t,i): " << alpha(t,i) << endl;
-                    cout << "time_i: " << time_i << endl;
-                    for(int g=0; g<O.size();g++){
-                        cout << O[g] << endl;
-                    }
-                    exit (EXIT_FAILURE);
-                }
             }
         }
         else if(time_j.length() > T-3){ //Check if the second observation is known
@@ -530,10 +494,6 @@ void ksi_prob(arma::vec& ksi, arma::mat alpha, arma::mat beta, arma::vec A_val, 
             for(int i=0; i<n_from[j]; i++){
                 int i2 = from[start_idx+i];
                 ksi(i2) += prod * alpha(t,cor_row[start_idx+i])*A_val(i2);
-                if(isnan(ksi(i2))){
-                    cout << "ksi(i2): " << ksi(i2) << endl;
-                    exit (EXIT_FAILURE);
-                }
             }
         }
         else{ //If none of the observations are known do this.
@@ -544,11 +504,6 @@ void ksi_prob(arma::vec& ksi, arma::mat alpha, arma::mat beta, arma::vec A_val, 
                 prod = prod1 * alpha(t,i2);
                 for(int j = A_row_ptr[i2]; j<A_row_ptr[i2+1]; j++){
                     ksi(j) += prod * A_val(j)*beta(t+1,A_col_idx(j));
-                    if(isnan(ksi(j))){
-                        cout << "ksi(j): " << ksi(j) << endl;
-                        cout << "prod: " << prod << endl;
-                        exit (EXIT_FAILURE);
-                    }
                 }
             }
         }
@@ -617,15 +572,6 @@ void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_i
     possible_transitions(n_partners, c_partners, partners, L);
 
 
-    cout << "This is size of O: " << O.size() << "\n";
-    //for(int g=0; g<O.size();g++){
-      //  cout << O[g] << endl;
-    //}
-    cout << "This is size of n_O: " << n_O.size() << "\n";
-    //for(int u=0; u<n_O.size(); u++){
-      //  cout << n_O[u]<< endl;
-    //}
-
     //Loop through either to the maximum iteration is reach or the transition matrix have converged enough
     while(max_itr > itr && change >= eps){
         //cout << "itr: " << itr << "\n";
@@ -636,13 +582,9 @@ void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_i
 
         //Loop thorugh all of the observation sequences
         for(int i=0; i< total_obs; i++){
-            //cout << "Observation: " << i << endl;
             arma::mat beta(T, n, arma::fill::zeros);
             arma::mat alpha(T, n, arma::fill::zeros);
             vector<string> o = std::vector<string>(O.begin() + i*(L+1), O.begin() + (i+1)*L + i+1);
-            //for(int g=0; g<o.size();g++){
-              //  cout << o[g] << endl;
-            //}
             int n_o = n_O[i];
             
             auto t_alpha = std::chrono::high_resolution_clock::now();
@@ -676,41 +618,16 @@ void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_i
                 ksi_sum2 += ksi_sum(r+i);
             }
             int r2 = A_row_ptr(k+1)-r;
-           // cout << "start" << endl;
             double st = 0.;
             int u=0;
             for(int l=A_row_ptr(k); l<A_row_ptr(k+1); l++){
-                //int l2 = partners[at_partner];
                 if(ksi_sum2 == 0){
                     A_val(l) = 1./r2;
-                    //cout << A_val(l) << endl;
                 }else{
-                    //int idx = row_col_to_idx(k,l2, A_row_ptr, A_col_idx, time);
                     A_val(l) = ksi_sum(l) / ksi_sum2;
-                    if(isnan(A_val(l))){
-                        u = l;
-                        cout << "This is ksi_sum2: " << ksi_sum2 << endl;
-                        cout << "This is ksi_sum(l): " << ksi_sum(l) << endl;
-                        //for(int g=0; g<O.size();g++){
-                            //if(O[g].length() > T-3){
-                              //  cout << O[g] << endl;
-                            //}
-                        //}
-                        break;
-                    }
                 }
                 at_partner ++;
-                //cout << A_val(l) << endl;
-                //st += A_val(l);
             }
-            if(isnan(A_val(u))){
-                break;
-            }
-            //cout << "This is st: " << st << endl;
-            //if(st == 0){
-              //  cout << k << endl;
-            //}
-            //cout << "end" << endl;
         }
 
         
@@ -726,23 +643,10 @@ void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_i
         change = change_mat.max();
     }
 
-    //if(itr < 30){
-      //  cout << "ERROR!!!" << endl;
-        /*
-        for(int g=0; g<O.size();g++){
-            cout << O[g] << endl;
-        }
-        cout << "This is size of n_O: " << n_O.size() << "\n";
-        for(int u=0; u<n_O.size(); u++){
-            cout << n_O[u]<< endl;
-        }
-        */
-    //}
-
-    cout << "This is time_alpha: " << time_alpha << endl;
-    cout << "This is time_beta: " << time_beta << endl;
-    cout << "This is time_ksi: " << time_ksi << endl;
-    cout << "This is time_update: " << time_update << endl;
+    //cout << "This is time_alpha: " << time_alpha << endl;
+    //cout << "This is time_beta: " << time_beta << endl;
+    //cout << "This is time_ksi: " << time_ksi << endl;
+    //cout << "This is time_update: " << time_update << endl;
 }
 
 
@@ -920,7 +824,6 @@ void import_data_long2(string file_name, vector<string>& data, vector<int>& data
     }
     while(std::getline(in, str)){
         int k = 0;
-        //cout << "this is str: "<< str<< "\n";
         if(str.size()>0){
             stringstream ss(str);
             string token;
@@ -1158,7 +1061,7 @@ Input variables:
 Output:
 Two files containing the mean of the random walkers and the standard deviation
 */
-void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::cube& sd, string name, double& time){
+void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::cube& sd, string name, double& time, int rw_boot){
     vector<string> data;
     vector<string> data_bw;
     import_data(file_name, data);
@@ -1175,11 +1078,10 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
     uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
     auto t1 = std::chrono::high_resolution_clock::now();
     adapted_baum_welch(A_val, A_row_ptr, A_col_idx, data_bw, data_count, 1000, pow(10, -3), L, false, false);
-    graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
     auto t2 = std::chrono::high_resolution_clock::now();
     double duration_seconds = std::chrono::duration<double>(t2 - t1).count(); //Measure time
     time += duration_seconds;
-
+    graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
     arma::mat rw(L,L, arma::fill::zeros);
     random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
     cout << rw << endl;
@@ -1204,21 +1106,21 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
         adapted_baum_welch(A_val, A_row_ptr, A_col_idx, new_data, data_count, 1000, pow(10, -3), L);
         auto t4 = std::chrono::high_resolution_clock::now();
         double duration_seconds2 = std::chrono::duration<double>(t4 - t3).count(); //Measure time
-        time += duration_seconds;
-        //If you want the bootstrap results for the summary plots: Uncomment the next four lines
-        //arma::mat rw(L,L, arma::fill::zeros);
-        //random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
-        //mean.slice(i+1) = rw;
-        //sd.slice(i+1) = rw;
+        time += duration_seconds2;
+        if(rw_boot == 1){
+            arma::mat rw(L,L, arma::fill::zeros);
+            random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
+            mean.slice(i+1) = rw;
+            sd.slice(i+1) = rw;
+        }
     }
 
     arma::mat mean_slices(L,L, arma::fill::zeros);
-    mean_cube_slices(mean, mean_slices, n_boot);
+    mean_cube_slices(mean, mean_slices, n_boot+1);
 
     arma::mat sd_slices(L,L, arma::fill::zeros);
-    sd_cube_slices(sd, sd_slices, n_boot, mean_slices);
+    sd_cube_slices(sd, sd_slices, n_boot+1, mean_slices);
 
-    //std::cout << mean_slices;
 
 
     std::ofstream myfile;
@@ -1248,7 +1150,7 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
 
 
 
-void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::cube& sd, string name, double& time){
+void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::cube& sd, string name, double& time, int rw_boot){
     vector<string> data;
     vector<int> data_count;
     import_data_long2(file_name, data, data_count, L);
@@ -1283,20 +1185,21 @@ void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::
         auto t4 = std::chrono::high_resolution_clock::now();
         double duration_seconds2 = std::chrono::duration<double>(t4 - t3).count(); //Measure time
         time += duration_seconds2;
-        //If you want the bootstrap results for the summary plots: Uncomment the next four lines
-        //arma::mat rw(L,L, arma::fill::zeros);
-        //random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
-        //mean.slice(i+1) = rw;
-        //sd.slice(i+1) = rw;
+        if(rw_boot == 1){
+            arma::mat rw(L,L, arma::fill::zeros);
+            random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
+            mean.slice(i+1) = rw;
+            sd.slice(i+1) = rw;
+        }
+        
     }
 
     arma::mat mean_slices(L,L, arma::fill::zeros);
-    mean_cube_slices(mean, mean_slices, n_boot);
+    mean_cube_slices(mean, mean_slices, n_boot+1);
 
     arma::mat sd_slices(L,L, arma::fill::zeros);
-    sd_cube_slices(sd, sd_slices, n_boot, mean_slices);
+    sd_cube_slices(sd, sd_slices, n_boot+1, mean_slices);
 
-    //std::cout << mean_slices;
 
 
     std::ofstream myfile;
@@ -1344,35 +1247,35 @@ double sum_vector(vector<double> vec){
 
 /*
 The command line arguments needs to be as follow:
-data_file_name.txt L number_bootstraps name_output_file cross_sectional=1
+data_file_name.txt L number_bootstraps name_output_file cross_sectional rw_bootstrap
 
-If you just want the maximum likelihood results set number_bootstrap = 1. If you have longitudinal data set the last variable to be 0.
+If you just want the maximum likelihood results set number_bootstrap = 0. 
+If you have cross_sectional data set cross_sectional = 1, if longitudinal data set cross_sectional = 0.
+If you want to add summary data for each bootstrap set rw_bootstrap = 1, else set rw_bootstrap = 0.
 */
 int main(int argc, char** argv){
 
-int L;
-int n_boot;
-
+int L, n_boot, rw_boot;
 
 double time;
 
-if(argc != 6 || (atoi(argv[5]) != 0 && atoi(argv[5]) != 1) || atoi(argv[2]) <= 0 || atoi(argv[3]) < 0) {
+if(argc != 7 || (atoi(argv[5]) != 0 && atoi(argv[5]) != 1) || atoi(argv[2]) <= 0 || atoi(argv[3]) < 0 || (atoi(argv[6]) != 0 && atoi(argv[6]) != 1)) {
     cout << "Usage:\n\t./hyperhmm.ce [datafile] [number of features] [number of bootstrap resamples] [output file label] [cross-sectional data (0 or 1)]\n";
     return 1;
 }
 
 L = atoi(argv[2]);
 n_boot = atoi(argv[3]);
+rw_boot = atoi(argv[6]);
 
-arma::cube mean(L,L,n_boot,arma::fill::zeros);
-arma::cube sd(L,L,n_boot,arma::fill::zeros);
-
+arma::cube mean(L,L,n_boot+1,arma::fill::zeros);
+arma::cube sd(L,L,n_boot+1,arma::fill::zeros);
 
 if(atoi(argv[5]) == 1){
-    do_bootstrap(argv[1], n_boot, L, mean, sd, argv[4], time);
+    do_bootstrap(argv[1], n_boot, L, mean, sd, argv[4], time, rw_boot);
 }
 else if(atoi(argv[5]) == 0){
-    do_bootstrap2(argv[1], n_boot, L, mean, sd, argv[4], time);
+    do_bootstrap2(argv[1], n_boot, L, mean, sd, argv[4], time, rw_boot);
 }
 
 cout << "The time it took to run the algorithm with " << n_boot << " bootstrap(s): " << time << endl;
