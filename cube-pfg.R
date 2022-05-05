@@ -6,31 +6,36 @@ library(ggraph)
 library(gridExtra)
 library(igraph)
 
-for(expt in 1:4) {
+for(expt in 1:5) {
   use.width = T           # use line width to display edge weights?
   duplicate.offset = 0.   # vertical offset for nodes in identical positions
-  lab.size = 3
-  p.size = 1
-  node.labels = T
-  
-  # get data. works with unpadded version too, but that looks less evenly spaced
+  lab.size = 3            # size for edge labels
+  p.size = 1              # point size
+  node.labels = T         # node labels, yes or no?
+  threshold = 0           # ignore edges under a threshold in the hypercube plot
+  curvature = 1           # curvature of edges in the PFG plot
+
+  # read data from different experiments
   if(expt == 1) {
     tl = readLines("single_graph_visual.txt"); p.size = 2
   } else if(expt == 2) {
     tl = readLines("double_graph_visual.txt"); lab.size = 3
   } else if(expt == 3) {
     tl = readLines("ovarian_graph_visual.txt"); node.labels = F; lab.size = 3
-  } else {
-    tl = readLines("graph_viz_tb_drug.txt"); node.labels = F; lab.size = 3
+  } else if(expt == 4) {
+    tl = readLines("graph_viz_tb_drug.txt"); node.labels = F; lab.size = 3; threshold = 100; curvature = 0.5
+  } else if(expt == 5) {
+    tl = readLines("graph_viz_tb_drug.txt"); node.labels = F; lab.size = 3; curvature = 0.5
   }
-  
+
+  # get unique set of transitions and associated counts
   l = unique(tl)
   counts = rep(0, length(l))
   for(i in 1:length(l)) {
     set = which(tl == l[i])
     counts[i] = length(set)
   }
-  
+    
   # split into lists of source and destination nodes
   srcs = dests = list()
   n = 1
@@ -57,6 +62,8 @@ for(expt in 1:4) {
     refcodes = srcs[refs]
     ins[[length(ins)+1]] = which(nodes %in% refcodes)
   }
+
+  ########### first produce hypercube visualisation
   
   # spherical polars: r, theta, phi
   # r = 1 everywhere
@@ -111,52 +118,48 @@ for(expt in 1:4) {
   
   spcoords = transcoords
   
-  # NB: addition to the pseudocode in Cell Systems
-  # deal with degenerate phis
-  #duprefs = which(duplicated(subset(spcoords, select=c(theta,phi))))
-  
   coords = data.frame(x = spcoords$r*cos(spcoords$phi)*sin(spcoords$theta), y = spcoords$r*sin(spcoords$phi)*sin(spcoords$theta), z = spcoords$r*cos(spcoords$theta), label = spcoords$label)
   
-  #coords$x[duprefs] = coords$x[duprefs] + duplicate.offset
   
   # dataframe for line segments in cartesian coords
   segments = data.frame()
   seglabels = data.frame()
   for(i in 1:length(srcs)) {
-    src = which(coords$label == srcs[i])
-    dest = which(coords$label == dests[i])
-    label = paste(c("+", which(unlist(strsplit(srcs[i], split="")) !=unlist(strsplit(dests[i], split="")))), collapse="")
-    segment = data.frame(src.x = coords[src,]$x, src.y = coords[src,]$y, src.z = coords[src,]$z, dest.x = coords[dest,]$x, dest.y = coords[dest,]$y, dest.z = coords[dest,]$z, count=counts[i])
-    segments = rbind(segments, segment)
-    seglabels = rbind(seglabels, data.frame(x = (segment$src.x + segment$dest.x)/2, y = (segment$src.y + segment$dest.y)/2,  z = (segment$src.z + segment$dest.z)/2, label=label))
+    if(counts[i] > threshold) {
+      src = which(coords$label == srcs[i])
+      dest = which(coords$label == dests[i])
+      label = paste(c("+", which(unlist(strsplit(srcs[i], split="")) !=unlist(strsplit(dests[i], split="")))), collapse="")
+      segment = data.frame(src.x = coords[src,]$x, src.y = coords[src,]$y, src.z = coords[src,]$z, dest.x = coords[dest,]$x, dest.y = coords[dest,]$y, dest.z = coords[dest,]$z, count=counts[i])
+      segments = rbind(segments, segment)
+      seglabels = rbind(seglabels, data.frame(x = (segment$src.x + segment$dest.x)/2, y = (segment$src.y + segment$dest.y)/2,  z = (segment$src.z + segment$dest.z)/2, label=label))
+    }
   }
   
   base = data.frame(src.x=0,src.z=0,dest.x=0,dest.z=0,count=0)
   
   # plot
   if(use.width) {
-  cube.plot = 
-  ggplot() +
-    geom_segment(data=segments, aes(x=src.z, y=src.x, xend=dest.z, yend=dest.x, size=count/5000), color="#AAAAAA") +
-    scale_size_identity() +
-  #  geom_segment(data=base, aes(x=src.z, y=src.x, xend=dest.z, yend=dest.x, size=count), color="#AAAAAA") +
-    geom_point(data = coords, aes(x=z, y=x), size=p.size, color="#AAAAAA") +
-    geom_text(data=seglabels, aes(x=z,y=x,label=label), color="#888888", size=lab.size) +
-    xlim(-1,1) + ylim(-1,1) + theme_void() + theme(legend.position="none")
+    cube.plot = ggplot() +
+      geom_segment(data=segments, aes(x=src.z, y=src.x, xend=dest.z, yend=dest.x, size=count/5000), color="#AAAAAA") +
+      scale_size_identity() +
+      geom_point(data = coords, aes(x=z, y=x), size=p.size, color="#AAAAAA") +
+      geom_text(data=seglabels, aes(x=z,y=x,label=label), color="#888888", size=lab.size) +
+      xlim(-1,1) + ylim(-1,1) + theme_void() + theme(legend.position="none")
     if(node.labels) { cube.plot = cube.plot + geom_text_repel(data = coords, aes(x=z,y=x,label=label)) }
   } else {
-  cube.plot = ggplot() +
-    geom_segment(data=segments, aes(x=src.z, y=src.x, xend=dest.z, yend=dest.x), color="#AAAAAA") +
-    geom_point(data = coords, aes(x=z, y=x), size=p.size, color="#AAAAAA") +
-    geom_text(data=seglabels, aes(x=z,y=x,label=label), color="#888888", size=lab.size) +
-    xlim(-1,1) + ylim(-1,1) + theme_void() + theme(legend.position="none")
+    cube.plot = ggplot() +
+      geom_segment(data=segments, aes(x=src.z, y=src.x, xend=dest.z, yend=dest.x), color="#AAAAAA") +
+      geom_point(data = coords, aes(x=z, y=x), size=p.size, color="#AAAAAA") +
+      geom_text(data=seglabels, aes(x=z,y=x,label=label), color="#888888", size=lab.size) +
+      xlim(-1,1) + ylim(-1,1) + theme_void() + theme(legend.position="none")
     if(node.labels) { cube.plot = cube.plot + geom_text_repel(data = coords, aes(x=z,y=x,label=label)) }
   }
   g1 = cube.plot
   
   
-  ###########
-  
+  ########### now produce probabilistic feature graph
+
+  # get the set of pairwise first-next feature labels throughout each pathway
   edges=data.frame()
   zeroes = strsplit(tl[1], split=" ")[[1]][1]
   for(i in 1:1000) {
@@ -172,20 +175,28 @@ for(expt in 1:4) {
     }
     lastchange = change
   }
+  # get unique edges and counts
   uedges = unique(edges)
   ucount = 0*uedges$src
   for(i in 1:nrow(uedges)) {
     ucount[i] = length(which(edges$src == uedges$src[i] & edges$dest == uedges$dest[i]))
   }
+
+  # construct graph from these edges
   uedges = rbind(uedges, uedges[1,])
   ucount[length(ucount)+1] = 1
   g = graph.data.frame(uedges)
   E(g)$weight = ucount
   maxw = max(ucount)
-  
-   g2 = ggraph(g) + geom_edge_bend(aes(edge_width=exp(weight/maxw), edge_alpha = weight/maxw), arrow=arrow()) + geom_node_point() + geom_node_label(aes(label=name)) + theme_void() + theme(legend.position = "none")
 
-  png(paste(c("output-", expt, ".png"), collapse=""), width=1600, height=500, res=150)
+  # plot PFG
+  g2 = ggraph(g) + geom_edge_bend(aes(edge_width=exp(weight/maxw), edge_alpha = weight/maxw), strength=curvature,  arrow=arrow()) + geom_node_point() + geom_node_label(aes(label=name)) + theme_void() + theme(legend.position = "none")
+
+  if(expt >= 4) {
+    png(paste(c("output-", expt, ".png"), collapse=""), width=2400, height=800, res=150)
+  } else {
+    png(paste(c("output-", expt, ".png"), collapse=""), width=1600, height=500, res=150)
+  }
   grid.arrange(g1, g2, nrow=1)
   dev.off()
 }
