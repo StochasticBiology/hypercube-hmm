@@ -22,6 +22,9 @@ The code takes several command line arguments:
 - `cross-sectional data` -- if 1, data are assumed to be independent snapshots and the datafile should have one column. If 0, data are assumed to be observed transitions between two states and the datafile should have two columns (ancestor and descendant state)
 - `simulate random walkers for each sample` -- random walkers are simulated on the point estimate hypercube to summarise the dynamics. If 1, they are simulated on every bootstrapped hypercube too and the summary is over all resamples. This can make the code take much longer for simple systems.
 
+For example,
+`./hyperhmm.ce Data/simple_case1_L5.txt 5 100 simple1 1 0`
+
 `bubble_plots.py` summarises the outputs of the various experiments using `hyperhmm.cpp` as bubble plots.
 
 `cube-pfg.R` produces hypercube visualisations and probabilistic feature graphs from the outputs.
