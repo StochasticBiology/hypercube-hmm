@@ -1124,7 +1124,7 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
 
 
     std::ofstream myfile;
-    myfile.open("mean" + name + ".txt");
+    myfile.open("mean_" + name + ".txt");
 
     for(int m=0; m<L; m++){
         for(int n=0; n<L; n++){
@@ -1135,7 +1135,7 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
 
 
     std::ofstream myfile2;
-    myfile2.open("sd" + name + ".txt");
+    myfile2.open("sd_" + name + ".txt");
 
     for(int m=0; m<L; m++){
         for(int n=0; n<L; n++){
@@ -1260,7 +1260,7 @@ int L, n_boot, rw_boot;
 double time;
 
 if(argc != 7 || (atoi(argv[5]) != 0 && atoi(argv[5]) != 1) || atoi(argv[2]) <= 0 || atoi(argv[3]) < 0 || (atoi(argv[6]) != 0 && atoi(argv[6]) != 1)) {
-    cout << "Usage:\n\t./hyperhmm.ce [datafile] [number of features] [number of bootstrap resamples] [output file label] [cross-sectional data (0 or 1)]\n";
+    cout << "Usage:\n\t./hyperhmm.ce [datafile] [number of features] [number of bootstrap resamples] [output file label] [cross-sectional data (0 or 1)] [simulate random walkers for each sample (0 or 1)]\n";
     return 1;
 }
 
