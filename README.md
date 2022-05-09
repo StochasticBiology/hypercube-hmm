@@ -45,7 +45,7 @@ For cross-sectional observations, data should be provided as a single-column fil
 
 `0001`<br>
 `0011`<br>
-`1011`
+`1001`
 
 For longitudinal observations, including those derived from estimated phylogenies, data should be provided as a two-column file where each row gives an independent transition observation between two states of length L, for example
 
@@ -53,7 +53,7 @@ For longitudinal observations, including those derived from estimated phylogenie
 `0100 0111`<br>
 `1001 1101`
 
-The initial state is assumed to be all `0`s, and the system evolves by acquiring `1`.
+The initial state is assumed to be all `0`s, and the system evolves by acquiring `1`s.
 
 Plotting
 ------
