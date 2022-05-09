@@ -17,15 +17,15 @@ for(expt in 1:5) {
 
   # read data from different experiments
   if(expt == 1) {
-    tl = readLines("single_graph_visual.txt"); p.size = 2
+    tl = readLines("graph_viz_simple1.txt.txt"); p.size = 2
   } else if(expt == 2) {
-    tl = readLines("double_graph_visual.txt"); lab.size = 3
+    tl = readLines("graph_viz_double1.txt.txt"); lab.size = 3
   } else if(expt == 3) {
-    tl = readLines("ovarian_graph_visual.txt"); node.labels = F; lab.size = 3
+    tl = readLines("graph_viz_ovarian.txt.txt"); node.labels = F; lab.size = 3
   } else if(expt == 4) {
-    tl = readLines("graph_viz_tb_drug.txt"); node.labels = F; lab.size = 3; threshold = 100; curvature = 0.5
+    tl = readLines("graph_viz_tb_drug.txt.txt"); node.labels = F; lab.size = 3; threshold = 100; curvature = 0.5
   } else if(expt == 5) {
-    tl = readLines("graph_viz_tb_drug.txt"); node.labels = F; lab.size = 3; curvature = 0.5
+    tl = readLines("graph_viz_tb_drug.txt.txt"); node.labels = F; lab.size = 3; curvature = 0.5
   }
 
   # get unique set of transitions and associated counts
