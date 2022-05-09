@@ -1,19 +1,22 @@
 # hypercube-hmm
 Hypercubic inference using Hidden Markov Models
 
-Code to infer the transition probabilities on a hypercubic transition network given some observations of emitted signals from a hidden Markov model on that network. Visualisations of the inferred parameterised model and its summary dynamics are also performed. 
+Code to infer the transition probabilities on a hypercubic transition network given some observations of emitted signals from a hidden Markov model on that network. Visualisations of the inferred parameterised model and its summary dynamics are also performed. This is the expectation-maximisation cousin of HyperTraPS https://github.com/StochasticBiology/HyperTraPS (simple implementation here https://github.com/StochasticBiology/hypertraps-simple).
 
 Requirements
 -------
 
-The inference code uses the C++ Armadillo library [1]. Bubble plot visualisations use Python libraries matplotlib [2], pandas [3], seaborn [4], and numpy [5]. Other visualisations use R libraries stringr [6], ggplot2 [7], ggrepel [8], gridExtra [9], and igraph [10].
+The inference code uses the C++ `armadillo` library [1]. Bubble plot visualisations use Python libraries `matplotlib` [2], `pandas` [3], `seaborn` [4], and `numpy` [5]. Other visualisations use R libraries `stringr` [6], `ggplot2` [7], `ggrepel` [8], `gridExtra` [9], and `igraph` [10].
+
+Contents
+=======
 
 Minimal example
 -------
 
 `run-simple.sh` is a Bash script wrapping a simple, fast example case. 
 
-Contents
+Inference
 -------
 
 `hyperhmm.cpp` is the inference code. Compile with, for example,
@@ -34,12 +37,19 @@ The code takes several command line arguments:
 For example,
 `./hyperhmm.ce Data/simple_case1_L5.txt 5 100 simple1 1 1`
 
+Data
+------
+Synthetic and published data is in `Data`. The ovarian cancer dataset is from [11]; the tuberculosis dataset is from [12]. Pre-computed data, including HyperTraPS posteriors, for example plotting is in `Plot files/`.
+
+Plotting
+------
+
 `bubble_plots.py` summarises the outputs of the various experiments using `hyperhmm.cpp` as bubble plots. As written, this draws on the pre-computed outputs in the `Plot files/` directory. `bubble_plots_simple.py` does this plotting for the example case using the freshly generated data.
 
 `cube-pfg.R` produces hypercube visualisations and probabilistic feature graphs from the outputs. `cube-pfg-simple.R` does this for the example case.
 
 References
--------
+=====
 
 [1] Conrad Sanderson and Ryan Curtin. Armadillo: a template-based c++ library for linear algebra. Journal of Open Source Software, 1(2):26, 2016.
 
@@ -61,3 +71,6 @@ References
 
 [10] Gabor Csardi and Tamas Nepusz. The igraph software package for complex network research. InterJournal, Complex Systems:1695, 2006.
 
+[11] Turid Knutsen et al. The interactive online sky/m-fish & cgh database and the entrez cancer chromosomes search database: linkage of chromosomal aberrations with the genome sequence. Genes, Chromosomes and Cancer, 44(1):52–64, 2005.
+
+[12] Nicola Casali et al. Evolution and transmission of drug-resistant tuberculosis in a russian population. Nature genetics, 46(3):279–286, 2014.
