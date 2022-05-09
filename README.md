@@ -42,18 +42,14 @@ Data
 Synthetic and published data is in `Data`. The ovarian cancer dataset is from [11]; the tuberculosis dataset is from [12]. Pre-computed data, including HyperTraPS posteriors, for example plotting is in `Plot files/`.
 
 For cross-sectional observations, data should be provided as a single-column file where each row gives an independent snapshot observation of length L, for example
-`0001
-
-0011
-
-1011`
+`0001`<br>
+`0011`<br>
+`1011`
 
 For longitudinal observations, including those derived from estimated phylogenies, data should be provided as a two-column file where each row gives an independent transition observation between two states of length L, for example
-`0001 0011
-
-0100 0111
-
-1001 1101`
+`0001 0011`<br>
+`0100 0111`<br>
+`1001 1101`
 
 The initial state is assumed to be all `0`s, and the system evolves by acquiring `1`.
 
