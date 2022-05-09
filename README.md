@@ -3,9 +3,18 @@ Hypercubic inference using Hidden Markov Models
 
 Code to infer the transition probabilities on a hypercubic transition network given some observations of emitted signals from a hidden Markov model on that network. Visualisations of the inferred parameterised model and its summary dynamics are also performed. 
 
-The inference code uses the C++ Armadillo library \cite{sanderson2016armadillo}. Bubble plot visualisations use Python libraries matplotlib \cite{Hunter:2007}, pandas \cite{mckinney-proc-scipy-2010}, seaborn \cite{Waskom2021}, and numpy \cite{harris2020array}. Other visualisations use R libraries stringr \cite{stringr}, ggplot2 \cite{ggplot2}, ggrepel \cite{ggrepel}, gridExtra \cite{gridExtra}, and igraph \cite{igraph}.
+Requirements
+-------
 
-`run-example.sh` is a Bash script wrapping a simple, fast example case. `run.sh` wraps the full set of HyperHMM experiments.
+The inference code uses the C++ Armadillo library [1]. Bubble plot visualisations use Python libraries matplotlib [2], pandas [3], seaborn [4], and numpy [5]. Other visualisations use R libraries stringr [6], ggplot2 [7], ggrepel [8], gridExtra [9], and igraph [10].
+
+Minimal example
+-------
+
+`run-simple.sh` is a Bash script wrapping a simple, fast example case. 
+
+Contents
+-------
 
 `hyperhmm.cpp` is the inference code. Compile with, for example,
 
@@ -23,8 +32,23 @@ The code takes several command line arguments:
 - `simulate random walkers for each sample` -- random walkers are simulated on the point estimate hypercube to summarise the dynamics. If 1, they are simulated on every bootstrapped hypercube too and the summary is over all resamples. This can make the code take much longer for simple systems.
 
 For example,
-`./hyperhmm.ce Data/simple_case1_L5.txt 5 100 simple1 1 0`
+`./hyperhmm.ce Data/simple_case1_L5.txt 5 100 simple1 1 1`
 
-`bubble_plots.py` summarises the outputs of the various experiments using `hyperhmm.cpp` as bubble plots.
+`bubble_plots.py` summarises the outputs of the various experiments using `hyperhmm.cpp` as bubble plots. As written, this draws on the pre-computed outputs in the `Plot files/` directory. `bubble_plots_simple.py` does this plotting for the example case using the freshly generated data.
 
-`cube-pfg.R` produces hypercube visualisations and probabilistic feature graphs from the outputs.
+`cube-pfg.R` produces hypercube visualisations and probabilistic feature graphs from the outputs. `cube-pfg-simple.R` does this for the example case.
+
+References
+-------
+
+[1] Conrad Sanderson and Ryan Curtin. Armadillo: a template-based c++ library for linear algebra. Journal of Open Source Software, 1(2):26, 2016.
+[2] J. D. Hunter. Matplotlib: A 2d graphics environment. Computing in Science & Engineering, 9(3):90–95, 2007.
+[3] Wes McKinney. Data Structures for Statistical Computing in Python. In Stefan van der Walt and Jarrod Millman, editors, Proceedings of the 9th Python in Science Conference, pages 56 – 61, 2010.
+[4] Michael L. Waskom. seaborn: statistical data visualization. Journal of Open Source Software, 6(60):3021, 2021.
+[5] Charles R. Harris et al. Array programming with NumPy. Nature, 585(7825):357–362, September 2020.
+[6] Hadley Wickham. stringr: Simple, Consistent Wrappers for Common String Operations, 2019. R package version 1.4.0.
+[7] Hadley Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.
+[8] Kamil Slowikowski. ggrepel: Automatically Position Non-Overlapping Text Labels with ’ggplot2’, 2021. R package version 0.9.1.
+[9] Baptiste Auguie. gridExtra: Miscellaneous Functions for ”Grid” Graphics, 2017. R package version 2.3.
+[10] Gabor Csardi and Tamas Nepusz. The igraph software package for complex network research. InterJournal, Complex Systems:1695, 2006.
+
