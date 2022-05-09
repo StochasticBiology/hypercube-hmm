@@ -43,12 +43,16 @@ Synthetic and published data is in `Data`. The ovarian cancer dataset is from [1
 
 For cross-sectional observations, data should be provided as a single-column file where each row gives an independent snapshot observation of length L, for example
 `0001
+
 0011
+
 1011`
 
 For longitudinal observations, including those derived from estimated phylogenies, data should be provided as a two-column file where each row gives an independent transition observation between two states of length L, for example
 `0001 0011
+
 0100 0111
+
 1001 1101`
 
 The initial state is assumed to be all `0`s, and the system evolves by acquiring `1`.
