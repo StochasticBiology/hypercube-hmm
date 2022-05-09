@@ -37,6 +37,8 @@ The code takes several command line arguments:
 For example,
 `./hyperhmm.ce Data/simple_case1_L5.txt 5 100 simple1 1 1`
 
+The code outputs wide-format datafiles storing the mean and bootstrap standard deviation of the probability of observing a given change at a given time; also the trajectories of random walkers simulated on the inferred network.
+
 Data
 ------
 Synthetic and published data is in `Data`. The ovarian cancer dataset is from [11]; the tuberculosis dataset is from [12]. Pre-computed data, including HyperTraPS posteriors, for example plotting is in `Plot files/`.
