@@ -74,7 +74,11 @@ for(expt in 1:1) {
     refs = c(refs, which(nodes == first.nodes[i]))
   }
   for(i in 1:length(refs)) {
-    phis[refs[i]] = (i-1)*3.14159/(length(refs)-1)
+    if(i > 1) {
+      phis[refs[i]] = (i-1)*3.14159/(length(refs)-1)
+    } else {
+      phis[refs[i]] = 0
+    }
   }
   
   # iterate while we still have phi values to find
@@ -192,3 +196,4 @@ for(expt in 1:1) {
   grid.arrange(g1, g2, nrow=1)
   dev.off()
 }
+
