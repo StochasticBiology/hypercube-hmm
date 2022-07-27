@@ -102,7 +102,7 @@ vector<int> r_row_pascal(int r){
     }
 
     vector<int> prev = r_row_pascal(r - 1);
- 
+
     for(int i = 1; i < prev.size(); i++){
         int curr = prev[i - 1] + prev[i];
         row.push_back(curr);
@@ -141,8 +141,8 @@ Output:
 void states_at_time_t(vector<int>& n_states, vector<int>& cumulative_states, vector<int>& states, int L){
     int index = 0;
     vector<int> count;
-    string binary;  
-    
+    string binary;
+
     //Find the r'th row of Pascals triangle
     n_states = r_row_pascal(L);
     //Add teh first element
@@ -230,7 +230,7 @@ void possible_transitions_from(vector<int>& n_from, vector<int>& cumulative_from
             cumulative_from.push_back(c);
         }
     }
-    
+
 }
 
 
@@ -277,7 +277,7 @@ void possible_transitions(vector<int>& n_partners, vector<int>& cumulative_partn
             int c = cumulative_partners[i-1] + n_partners[i-1];
             cumulative_partners.push_back(c);
         }
-    }   
+    }
 }
 
 
@@ -464,7 +464,7 @@ void ksi_prob(arma::vec& ksi, arma::mat alpha, arma::mat beta, arma::vec A_val, 
             break;
         }
     }
-    
+
 
     //Loop thorugh all the times from 0 to T-1
     for(int t=t_start; t<T-1; t++){
@@ -531,20 +531,20 @@ Input variables:
 Output:
 - The output is the maximum likelihood estimate of the transition matrix A
 */
-void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_idx, vector<string> O, vector<int> n_O, int max_itr, double eps, int L, bool single_A = false, bool double_A = false){
+void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_idx, vector<string> O, vector<int> n_O, int max_itr,int& itr, double eps, int L, bool single_A = false, bool double_A = false){
     double time_alpha = 0.;
     double time_beta = 0.;
     double time_ksi = 0.;
     double time_update = 0.;
 
     double time = 0.;
-    
+
     int n = mypow2(L);
-    int itr = 0;
+    //int itr = 0;
     int T = L +1;
     int total_obs = O.size()/(L+1);
     double change = eps;
-    
+
 
     if(n_O[0] == 0){
         for(int i=0;i<O.size();i++){
@@ -586,7 +586,7 @@ void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_i
             arma::mat alpha(T, n, arma::fill::zeros);
             vector<string> o = std::vector<string>(O.begin() + i*(L+1), O.begin() + (i+1)*L + i+1);
             int n_o = n_O[i];
-            
+
             auto t_alpha = std::chrono::high_resolution_clock::now();
             forward_prob(alpha, A_val, A_row_ptr, A_col_idx, o, n_from, c_from, from, cor_row, n_states, c_states, states);
             auto t_alpha_end = std::chrono::high_resolution_clock::now();
@@ -598,7 +598,7 @@ void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_i
             auto t_beta_end = std::chrono::high_resolution_clock::now();
             double beta_ti = std::chrono::duration<double>(t_beta_end - t_beta).count();
             time_beta += beta_ti;
-            
+
             auto t_ksi = std::chrono::high_resolution_clock::now();
             ksi_prob(ksi_sum, alpha, beta, A_val, A_row_ptr, A_col_idx, o, n_o, n_partners, c_partners, partners, n_from, c_from, from, cor_row, n_states, c_states, states);
             auto t_ksi_end = std::chrono::high_resolution_clock::now();
@@ -630,7 +630,7 @@ void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_i
             }
         }
 
-        
+
 
 
 
@@ -1066,20 +1066,27 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
     vector<string> data_bw;
     import_data(file_name, data);
 
+    double time_itr = 0.;
+
+
     vector<string> data_unique;
     vector<int> data_count;
 
     unique_and_count(data, data_unique, data_count);
     add_questionmarks(data_unique, L, data_bw);
 
+
     arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
     arma::vec A_row_ptr(pow(2,L)+1, arma::fill::zeros);
     arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
     uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
+
+    int itr = 0;
     auto t1 = std::chrono::high_resolution_clock::now();
-    adapted_baum_welch(A_val, A_row_ptr, A_col_idx, data_bw, data_count, 1000, pow(10, -3), L, false, false);
+    adapted_baum_welch(A_val, A_row_ptr, A_col_idx, data_bw, data_count, 1000, itr, pow(10, -3), L, false, false);
     auto t2 = std::chrono::high_resolution_clock::now();
     double duration_seconds = std::chrono::duration<double>(t2 - t1).count(); //Measure time
+    time_itr += duration_seconds/itr;
     time += duration_seconds;
     graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
     arma::mat rw(L,L, arma::fill::zeros);
@@ -1087,6 +1094,28 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
     cout << rw << endl;
     mean.slice(0) = rw;;
     sd.slice(0) = rw;
+
+    //Write the maximum likelihood values to file
+
+
+    vector<int> n_partners;
+    vector<int> c_partners;
+    vector<int> partners;
+    possible_transitions(n_partners, c_partners, partners, L);
+    std::ofstream myfile3;
+    myfile3.open("transitions_" + name + ".txt");
+    myfile3 << "From " << "To " << "Probability" << endl;
+    int k = 0, c=0;
+    for(int i=0; i<mypow2(L); i++){
+        int n_end_vertices = n_partners[i];
+        int r = A_row_ptr(i);
+        c = 0;
+        for(int j=0; j<n_end_vertices; j++){
+            int j2 = partners[k];
+            myfile3 << i << " "<< j2 <<" "<< A_val(r+c) << endl;
+            k ++, c++;
+        }
+    }
 
 
     for(int i=0; i<n_boot; i++){
@@ -1102,10 +1131,12 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
         arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
         uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
 
+        itr = 0;
         auto t3 = std::chrono::high_resolution_clock::now();
-        adapted_baum_welch(A_val, A_row_ptr, A_col_idx, new_data, data_count, 1000, pow(10, -3), L);
+        adapted_baum_welch(A_val, A_row_ptr, A_col_idx, new_data, data_count, 1000, itr, pow(10, -3), L, false, false);
         auto t4 = std::chrono::high_resolution_clock::now();
         double duration_seconds2 = std::chrono::duration<double>(t4 - t3).count(); //Measure time
+        time_itr += duration_seconds2/itr;
         time += duration_seconds2;
         if(rw_boot == 1){
             arma::mat rw(L,L, arma::fill::zeros);
@@ -1114,6 +1145,8 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
             sd.slice(i+1) = rw;
         }
     }
+
+    //cout << "Average rutime per iteration with " << n_boot << " bootstrap(s): " << time_itr/(n_boot+1) << endl;
 
     arma::mat mean_slices(L,L, arma::fill::zeros);
     mean_cube_slices(mean, mean_slices, n_boot+1);
@@ -1144,6 +1177,7 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
         myfile2 << "\n";
     }
 
+
 }
 
 
@@ -1155,12 +1189,14 @@ void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::
     vector<int> data_count;
     import_data_long2(file_name, data, data_count, L);
 
+    int itr = 0;
+
     arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
     arma::vec A_row_ptr(pow(2,L)+1, arma::fill::zeros);
     arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
     uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
     auto t1 = std::chrono::high_resolution_clock::now();
-    adapted_baum_welch(A_val, A_row_ptr, A_col_idx, data, data_count, 1000, pow(10, -3), L, false, false);
+    adapted_baum_welch(A_val, A_row_ptr, A_col_idx, data, data_count, 1000, itr, pow(10, -3), L, false, false);
     auto t2 = std::chrono::high_resolution_clock::now();
     double duration_seconds = std::chrono::duration<double>(t2 - t1).count(); //Measure time
     time += duration_seconds;
@@ -1170,6 +1206,27 @@ void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::
     cout << rw << endl;
     mean.slice(0) = rw;;
     sd.slice(0) = rw;
+
+    //Write the maximum likelihood values to file
+    vector<int> n_partners;
+    vector<int> c_partners;
+    vector<int> partners;
+    possible_transitions(n_partners, c_partners, partners, L);
+    std::ofstream myfile3;
+    myfile3.open("transitions_" + name + ".txt");
+    myfile3 << "From " << "To " << "Probability" << endl;
+    int k = 0, c=0;
+    for(int i=0; i<mypow2(L); i++){
+        int n_end_vertices = n_partners[i];
+        int r = A_row_ptr(i);
+        c = 0;
+        for(int j=0; j<n_end_vertices; j++){
+            int j2 = partners[k];
+            myfile3 << i << " "<< j2 <<" "<< A_val(r+c) << endl;
+            k ++, c++;
+        }
+    }
+
     for(int i=0; i<n_boot; i++){
 
         cout << "Bootstrap number: " << i+1 << "\n";
@@ -1181,7 +1238,7 @@ void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::
         arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
         uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
         auto t3 = std::chrono::high_resolution_clock::now();
-        adapted_baum_welch(A_val, A_row_ptr, A_col_idx, new_data, data_count, 1000, pow(10, -3), L, false, false);
+        adapted_baum_welch(A_val, A_row_ptr, A_col_idx, new_data, data_count, 1000,itr, pow(10, -3), L, false, false);
         auto t4 = std::chrono::high_resolution_clock::now();
         double duration_seconds2 = std::chrono::duration<double>(t4 - t3).count(); //Measure time
         time += duration_seconds2;
@@ -1191,7 +1248,7 @@ void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::
             mean.slice(i+1) = rw;
             sd.slice(i+1) = rw;
         }
-        
+
     }
 
     arma::mat mean_slices(L,L, arma::fill::zeros);
@@ -1249,7 +1306,7 @@ double sum_vector(vector<double> vec){
   The command line arguments needs to be as follow:
   data_file_name.txt L number_bootstraps name_output_file cross_sectional rw_bootstrap
 
-  If you just want the maximum likelihood results set number_bootstrap = 0. 
+  If you just want the maximum likelihood results set number_bootstrap = 0.
   If you have cross_sectional data set cross_sectional = 1, if longitudinal data set cross_sectional = 0.
   If you want to add summary data for each bootstrap set rw_bootstrap = 1, else set rw_bootstrap = 0.
 */
@@ -1259,6 +1316,8 @@ int main(int argc, char** argv){
 
   double time;
 
+
+
   if(argc != 7 || (atoi(argv[5]) != 0 && atoi(argv[5]) != 1) || atoi(argv[2]) <= 0 || atoi(argv[3]) < 0 || (atoi(argv[6]) != 0 && atoi(argv[6]) != 1)) {
     cout << "Usage:\n\t./hyperhmm.ce [datafile] [number of features] [number of bootstrap resamples] [output file label] [cross-sectional data (0 or 1)] [simulate random walkers for each sample (0 or 1)]\n";
     return 1;
@@ -1267,6 +1326,8 @@ int main(int argc, char** argv){
   L = atoi(argv[2]);
   n_boot = atoi(argv[3]);
   rw_boot = atoi(argv[6]);
+
+
 
   arma::cube mean(L,L,n_boot+1,arma::fill::zeros);
   arma::cube sd(L,L,n_boot+1,arma::fill::zeros);
@@ -1278,6 +1339,7 @@ int main(int argc, char** argv){
     do_bootstrap2(argv[1], n_boot, L, mean, sd, argv[4], time, rw_boot);
   }
 
-  cout << "The time it took to run the algorithm with " << n_boot << " bootstrap(s): " << time << endl;
+  //cout << "The time it took to run the algorithm with " << n_boot << " bootstrap(s): " << time/(n_boot+1) << endl;
+  //cout << "Average rutime per iteration with " << n_boot << " bootstrap(s): " << time/(n_boot+1) << endl;
   return 0;
 }
