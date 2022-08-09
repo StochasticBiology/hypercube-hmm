@@ -52,12 +52,12 @@ def txt2matrix(txt_file):
 inputstr = sys.argv[1]
 
 # read file to get dimensions
-tmpmat = txt2matrix(f"mean_"+inputstr)
+tmpmat = txt2matrix(f"mean_"+inputstr+".txt")
 thisL = len(tmpmat)
 
 # plot mean and SD
-bubble_plot(thisL, txt2matrix(f"mean_"+inputstr), names = list(range(1, thisL+1)), color = 'dodgerblue', header = inputstr)
-bubble_plot(thisL, txt2matrix(f"sd_"+inputstr), names = list(range(1, thisL+1)), color = 'black', fc = 'none', header = inputstr)
+bubble_plot(thisL, txt2matrix(f"mean_"+inputstr+".txt"), names = list(range(1, thisL+1)), color = 'dodgerblue', header = inputstr)
+bubble_plot(thisL, txt2matrix(f"sd_"+inputstr+".txt"), names = list(range(1, thisL+1)), color = 'black', fc = 'none', header = inputstr)
 plt.savefig(inputstr+"_samples_hyperHMM.png", dpi=900)
 #plt.show()
 

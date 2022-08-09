@@ -18,7 +18,7 @@ threshold = 0           # ignore edges under a threshold in the hypercube plot
 curvature = 1           # curvature of edges in the PFG plot
 
 filelabel = args[1]
-filename = paste(c("graph_viz_", filelabel, ".txt"), collapse="")
+filename = paste(c("graph_viz_", filelabel, ".txt.txt"), collapse="")
 
 # read data from sampler
 tl = readLines(filename); p.size = 2
