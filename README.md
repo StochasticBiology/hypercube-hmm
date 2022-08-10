@@ -11,10 +11,12 @@ The inference code uses the C++ `armadillo` library [1]. Bubble plot visualisati
 Contents
 =======
 
-Minimal example
+Examples
 -------
 
 `run-simple.sh` is a Bash script wrapping a simple, fast example case. 
+
+`run-set.sh` runs through the experiments in the manuscript. A low number of resamples is used for speed, and summary plots are not individually styled; these can be adapted in the script.
 
 Inference
 -------
