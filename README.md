@@ -11,10 +11,12 @@ The inference code uses the C++ `armadillo` library [1]. Bubble plot visualisati
 Contents
 =======
 
-Minimal example
+Examples
 -------
 
 `run-simple.sh` is a Bash script wrapping a simple, fast example case. 
+
+`run-set.sh` runs through the experiments in the manuscript. A low number of resamples is used for speed, and summary plots are not individually styled; these can be adapted in the script.
 
 Inference
 -------
@@ -60,9 +62,9 @@ The initial state is assumed to be all `0`s, and the system evolves by acquiring
 Plotting
 ------
 
-`bubble_plots.py` summarises the outputs of the various experiments using `hyperhmm.cpp` as bubble plots. As written, this draws on the pre-computed outputs in the `Plot files/` directory. `bubble_plots_simple.py` does this plotting for the example case using the freshly generated data.
+`bubble_plots.py` summarises the outputs of the various experiments using `hyperhmm.cpp` as bubble plots. As written, this draws on the pre-computed outputs in the `Plot files/` directory. `bubble_plots_arg.py` does this plotting for any given case (including the example case using the freshly generated data) with a command-line argument giving the output file label to process: `python3 bubble_plots_arg.py simple1` for example.
 
-`cube-pfg.R` produces hypercube visualisations and probabilistic feature graphs from the outputs. `cube-pfg-simple.R` does this for the example case.
+`cube-pfg.R` produces hypercube visualisations and probabilistic feature graphs from the outputs. `cube-pfg-arg.R` does this for any given case (including the example case) with a command-line argument giving the output file label to process: `Rscript cube-pfg-arg.R simple1` for example.
 
 References
 =====
