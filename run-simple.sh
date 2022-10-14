@@ -5,7 +5,7 @@ g++ hyperhmm.cpp -o hyperhmm.ce
 ./hyperhmm.ce Data/simple_case1_L5.txt 5 10 simple1 1 1
 
 # plot "bubble plot" summaries of this output
-python3 bubble_plots_arg.py simple1.txt
+python3 bubble_plots_arg.py simple1
 
 # plot hypercubic and probabilistic feature graphs
-Rscript cube-pfg-arg.R simple1.txt
+Rscript cube-pfg-arg.R simple1
