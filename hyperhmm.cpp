@@ -1018,7 +1018,7 @@ void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma:
 
     possible_transitions(n_partners, c_partners, partners, n_traits);
     std::ofstream myfile;
-    myfile.open(file_name + ".txt");
+    myfile.open(file_name);
     //Loop through the number of random walkers
     for(int i=0; i<n_walkers; i++){
         int t = 0;
@@ -1260,7 +1260,7 @@ void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::
 
 
     std::ofstream myfile;
-    myfile.open("mean" + name + ".txt");
+    myfile.open("mean_" + name + ".txt");
 
     for(int m=0; m<L; m++){
         for(int n=0; n<L; n++){
@@ -1271,7 +1271,7 @@ void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::
 
 
     std::ofstream myfile2;
-    myfile2.open("sd" + name + ".txt");
+    myfile2.open("sd_" + name + ".txt");
 
     for(int m=0; m<L; m++){
         for(int n=0; n<L; n++){
