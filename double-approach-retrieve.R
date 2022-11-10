@@ -9,7 +9,7 @@ sf = 3
 ht.length = 1
 
 filenames = c("double_case2_L5", "double_case2_L7", "double_case2_L9", "hi-order", "ovarian", "simple_case10_L5", "simple_case1_L5", "simple_case2_L5", "simple_case2_L7", "simple_case2_L9", "simple_case4_L5")
-#filenames = filenames[1]
+#ilenames = filenames[1]
 
 for(fname in filenames) {
   rl = readLines(paste(c(fname, ".txt"), collapse=""))
@@ -76,8 +76,12 @@ for(fname in filenames) {
   p.5 = plot.hypercube2(fitted[[4]], use.width = T, node.labels=F, seg.labels = sl, threshold=0)
   q.5 = plot.pfg(fitted[[4]], pfg.layout="matrix")
   
-  png(paste(c(fname, "-2.png"), collapse=""), width=600*sf, height=800*sf, res=72*sf)
-  grid.arrange(o.4, o.5, p.4, p.5, q.4, q.5, nrow=3)
+  labmod= theme(plot.tag=element_text(size=7*sf))
+  
+  png(paste(c(fname, "-2.png"), collapse=""), width=800*sf, height=400*sf, res=72*sf)
+  #grid.arrange(o.4, o.5, p.4, p.5, q.4, q.5, nrow=3)
+  grid.arrange(o.4+labs(tag = "A.i")+labmod, p.4+labs(tag = "ii")+labmod, q.4+labs(tag = "iii")+labmod, 
+               o.5+labs(tag = "B.i")+labmod, p.5+labs(tag = "ii")+labmod, q.5+labs(tag = "iii")+labmod, nrow=2)
   dev.off()
 }
 

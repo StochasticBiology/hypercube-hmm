@@ -15,6 +15,7 @@ hypertraps.precomputed = T
 mhn.working = F
 nwalk = 5000
 ht.length = 1
+bubscale = 12
 
 filenames = c("double_case2_L5", "hi-order", "ovarian")
 
@@ -236,11 +237,11 @@ for(i in 1:(max(ceiling(nwalk/nrow(post.sample)), 1))) {
 
 source("hypercube-plots.R")
 if(expt == "ovarian") {sl = F} else {sl = T}
-o.1 = plot.bubbles2(bubble.probs.capri) + scale_size(range = c(0,20))
-o.2 = plot.bubbles2(bubble.probs.ot) + scale_size(range = c(0,20))
-o.3 = plot.bubbles2(bubble.probs.mhn) + scale_size(range = c(0,20))
-o.4 = plot.bubbles2(bubble.probs.ht) + scale_size(range = c(0,20))
-o.5 = plot.bubbles2(fitted[[1]], formatted=T) + scale_size(range = c(0,20))
+o.1 = plot.bubbles2(bubble.probs.capri) + scale_size(range = c(0,bubscale))
+o.2 = plot.bubbles2(bubble.probs.ot) + scale_size(range = c(0,bubscale))
+o.3 = plot.bubbles2(bubble.probs.mhn) + scale_size(range = c(0,bubscale))
+o.4 = plot.bubbles2(bubble.probs.ht) + scale_size(range = c(0,bubscale))
+o.5 = plot.bubbles2(fitted[[1]], formatted=T) + scale_size(range = c(0,bubscale))
 p.1 = plot.hypercube2(trans.list.capri, use.width= T, node.labels=F, seg.labels = sl, threshold=0)
 p.2 = plot.hypercube2(trans.list.ot, use.width= T, node.labels=F, seg.labels = sl, threshold=0)
 p.3 = plot.hypercube2(trans.list.mhn, use.width= T, node.labels=F, seg.labels = sl, threshold=0)
@@ -252,8 +253,20 @@ q.3 = plot.pfg(trans.list.mhn, pfg.layout="matrix")
 q.4 = plot.pfg(trans.list.ht, pfg.layout="matrix")
 q.5 = plot.pfg(fitted[[4]], pfg.layout="matrix")
 
-png(paste(c("comp-", fname, ".png"), collapse=""), width=1200*sf, height=800*sf, res=72*sf)
-grid.arrange(o.1, o.2, o.3, o.4, o.5, p.1, p.2, p.3, p.4, p.5, q.1, q.2, q.3, q.4, q.5, nrow=3)
+#png(paste(c("comp-", fname, ".png"), collapse=""), width=1200*sf, height=800*sf, res=72*sf)
+#grid.arrange(o.1, o.2, o.3, o.4, o.5, p.1, p.2, p.3, p.4, p.5, q.1, q.2, q.3, q.4, q.5, nrow=3)
+#dev.off()
+labmod= theme(plot.tag=element_text(size=7*sf))
+
+png(paste(c("comp-", fname, ".png"), collapse=""), width=800*sf, height=1200*sf, res=72*sf)
+grid.arrange(o.1+labs(tag = "A.i")+labmod, p.1+labs(tag = "ii")+labmod, q.1+labs(tag = "iii")+labmod,
+             o.2+labs(tag = "B.i")+labmod, p.2+labs(tag = "ii")+labmod, q.2+labs(tag = "iii")+labmod,
+             o.3+labs(tag = "C.i")+labmod, p.3+labs(tag = "ii")+labmod, q.3+labs(tag = "iii")+labmod,
+             o.4+labs(tag = "D.i")+labmod, p.4+labs(tag = "ii")+labmod, q.4+labs(tag = "iii")+labmod,
+             o.5+labs(tag = "E.i")+labmod, p.5+labs(tag = "ii")+labmod, q.5+labs(tag = "iii")+labmod,
+         nrow=5)
 dev.off()
+
+
 }
 tic.log(format=TRUE)
