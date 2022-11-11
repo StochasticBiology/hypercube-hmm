@@ -1,5 +1,11 @@
-## wrapper function for a HyperHMM call
-hypertraps = function(obs, precursors=NA, param.length = 2, param.kernel = 5, label="label", simulate=T) {
+## wrapper function for a HyperTraPS call
+hypertraps = function(obs,                   # matrix of observations
+                      precursors=NA,         # matrix of precursors (e.g. for ancestor-descendant samples)
+                      param.length = 2,      # MCMC chain length: 10^(n+2)
+                      param.kernel = 5,      # MCMC perturbation kernel -- see source code
+                      label="label",         # label for file I/O
+                      simulate="fork"        # "linear" to call in code; "fork" to fork; other to not simulate and just retrieve info
+                      ) {
   
   # catch various issues
   if(!is.matrix(obs)) { message("Couldn't interpret observations as a matrix!"); return() }
@@ -57,16 +63,16 @@ hypertraps = function(obs, precursors=NA, param.length = 2, param.kernel = 5, la
       final.rows[2*(i-1)+2] = paste(obs.rows[i], collapse="")
     }
   }
-
+  
   # create input file for HyperTraPS
   filename = paste(c("ht-in-", label, ".txt"), collapse="")
   write(final.rows, filename)
   
-  # create call to HyperHMM
+  # create call to HyperTraPS
   if(simulate == "linear") {
-  syscommand = paste(c("./hypertraps-dt.ce ", filename, " 1 ", param.length, " ", param.kernel, " 0"), collapse="")
-  message(paste(c("Attempting to externally execute ", syscommand), collapse=""))
-  system(syscommand)
+    syscommand = paste(c("./hypertraps-dt.ce ", filename, " 1 ", param.length, " ", param.kernel, " 0"), collapse="")
+    message(paste(c("Attempting to externally execute ", syscommand), collapse=""))
+    system(syscommand)
   } else if(simulate == "fork") {
     syscommand = paste(c("./hypertraps-dt.ce ", filename, " 1 ", param.length, " ", param.kernel, " 0 &"), collapse="")
     message(paste(c("Attempting to externally execute ", syscommand), collapse=""))
@@ -77,7 +83,8 @@ hypertraps = function(obs, precursors=NA, param.length = 2, param.kernel = 5, la
   
   # attempt to read the output of the run
   message("Attempting to read output...")
- 
+  
+  # construct expected posterior filename
   post.filename = paste(c(filename, "-posterior-0-1-", param.length, "-", param.kernel, ".txt"), collapse="")
   
   message(post.filename)
