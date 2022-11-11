@@ -19,7 +19,7 @@ You'll need to compile the C++ code. Install the `armadillo` library on your mac
 g++ hyperhmm.cpp -larmadillo -o hyperhmm.ce
 ```
 
-Then a simple example can be with
+Then a simple example could be run with
 
 ```
 ./hyperhmm.ce Data/simple_case1_L5.txt 5 10 simple1 1 1
