@@ -6,7 +6,7 @@ Code to infer the transition probabilities on a hypercubic transition network gi
 Requirements
 -------
 
-The inference code uses the C++ `armadillo` library [1]. Bubble plot visualisations use Python libraries `matplotlib` [2], `pandas` [3], `seaborn` [4], and `numpy` [5]. Other visualisations use R libraries `stringr` [6], `ggplot2` [7], `ggrepel` [8], `gridExtra` [9], and `igraph` [10].
+The inference code uses the C++ `armadillo` library [1]. Other visualisations use R libraries `stringr` [6], `ggplot2` [7], `ggrepel` [8], `gridExtra` [9], and `igraph` [10].
 
 Contents
 =======
@@ -86,13 +86,7 @@ References
 
 [1] Conrad Sanderson and Ryan Curtin. Armadillo: a template-based c++ library for linear algebra. Journal of Open Source Software, 1(2):26, 2016.
 
-[2] J. D. Hunter. Matplotlib: A 2d graphics environment. Computing in Science & Engineering, 9(3):90–95, 2007.
-
-[3] Wes McKinney. Data Structures for Statistical Computing in Python. In Stefan van der Walt and Jarrod Millman, editors, Proceedings of the 9th Python in Science Conference, pages 56 – 61, 2010.
-
-[4] Michael L. Waskom. seaborn: statistical data visualization. Journal of Open Source Software, 6(60):3021, 2021.
-
-[5] Charles R. Harris et al. Array programming with NumPy. Nature, 585(7825):357–362, September 2020.
+[2-5] redundant references from previous document
 
 [6] Hadley Wickham. stringr: Simple, Consistent Wrappers for Common String Operations, 2019. R package version 1.4.0.
 
