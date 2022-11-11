@@ -79,6 +79,8 @@ R wrapping
 
 The code base includes several R scripts that "wrap" external calls to HyperHMM, including preparing data and pulling output for plots. This setup is less streamlined than fully integrating HyperHMM into the R environment, but we currently don't have resource for that. The code `hyperhmm-wrap.R` provides a function to call HyperHMM from R; `hypertraps-wrap.R` does the same for HyperTraPS.
 
+The analyses and figures in the associated manuscript are reproduced with the various `...-start.R` and `...-retrieve.R` scripts. If you want to run these, pull the `Data/` contents into the working directory first.
+
 References
 =====
 
