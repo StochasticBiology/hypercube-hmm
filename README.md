@@ -14,7 +14,19 @@ Contents
 Examples
 -------
 
-`run-simple.sh` is a Bash script wrapping a simple, fast example case. 
+You'll need to compile the C++ code. Install the `armadillo` library on your machine, then the command to compile from the Terminal may look something like
+```
+g++ hyperhmm.cpp -larmadillo -o hyperhmm.ce
+```
+
+Then a simple example can be with
+
+```
+./hyperhmm.ce Data/simple_case1_L5.txt 5 10 simple1 1 1
+```
+
+The file `run-simple.R` attempts to demonstrate a simple implementation and plotting case using R.
+
 
 Inference
 -------
