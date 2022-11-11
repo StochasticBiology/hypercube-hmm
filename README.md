@@ -14,9 +14,19 @@ Contents
 Examples
 -------
 
-`run-simple.sh` is a Bash script wrapping a simple, fast example case. 
+You'll need to compile the C++ code. Install the `armadillo` library on your machine, then the command to compile from the Terminal may look something like
+```
+g++ hyperhmm.cpp -larmadillo -o hyperhmm.ce
+```
 
-`run-set.sh` runs through the experiments in the manuscript. A low number of resamples is used for speed, and summary plots are not individually styled; these can be adapted in the script.
+Then a simple example could be run with
+
+```
+./hyperhmm.ce Data/simple_case1_L5.txt 5 10 simple1 1 1
+```
+
+The file `run-simple.R` attempts to demonstrate a simple implementation and plotting case using R.
+
 
 Inference
 -------
@@ -43,7 +53,7 @@ The code outputs wide-format datafiles storing the mean and bootstrap standard d
 
 Data
 ------
-Synthetic and published data is in `Data`. The ovarian cancer dataset is from [11]; the tuberculosis dataset is from [12]. Pre-computed data, including HyperTraPS posteriors, for example plotting is in `Plot files/`.
+Synthetic and published data is in `Data`. The ovarian cancer dataset is from [11]; the tuberculosis dataset is from [12].
 
 For cross-sectional observations, data should be provided as a single-column file where each row gives an independent snapshot observation of length L, for example
 
@@ -62,9 +72,14 @@ The initial state is assumed to be all `0`s, and the system evolves by acquiring
 Plotting
 ------
 
-`bubble_plots.py` summarises the outputs of the various experiments using `hyperhmm.cpp` as bubble plots. As written, this draws on the pre-computed outputs in the `Plot files/` directory. `bubble_plots_arg.py` does this plotting for any given case (including the example case using the freshly generated data) with a command-line argument giving the output file label to process: `python3 bubble_plots_arg.py simple1` for example.
+Plotting is done in R, using functions in `hypercube-plots.R`. These include "bubble" plots for mean feature orderings, hypercube visualisations illustrating the complete transition network, and ordering graphs showing pairwise acquisition orderings.
 
-`cube-pfg.R` produces hypercube visualisations and probabilistic feature graphs from the outputs. `cube-pfg-arg.R` does this for any given case (including the example case) with a command-line argument giving the output file label to process: `Rscript cube-pfg-arg.R simple1` for example.
+R wrapping
+-------
+
+The code base includes several R scripts that "wrap" external calls to HyperHMM, including preparing data and pulling output for plots. This setup is less streamlined than fully integrating HyperHMM into the R environment, but we currently don't have resource for that. The code `hyperhmm-wrap.R` provides a function to call HyperHMM from R; `hypertraps-wrap.R` does the same for HyperTraPS.
+
+The analyses and figures in the associated manuscript are reproduced with the various `...-start.R` and `...-retrieve.R` scripts. If you want to run these, pull the `Data/` contents into the working directory first.
 
 References
 =====
