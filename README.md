@@ -25,7 +25,7 @@ Then a simple example could be run with
 ./hyperhmm.ce Data/simple_case1_L5.txt 5 10 simple1 1 1
 ```
 
-The file `run-simple.R` attempts to demonstrate a simple implementation and plotting case using R.
+The file `run-simple.R` attempts to demonstrate a simple implementation and plotting case using R. Alternatively, if you have run HyperHMM from the command line and just want to produce plots using the output, use `just-plot.R`.
 
 
 Inference
