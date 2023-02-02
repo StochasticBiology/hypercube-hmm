@@ -830,11 +830,13 @@ void import_data_long2(string file_name, vector<string>& data, vector<int>& data
             while(ss >> token){
                 if(k==0){
                     c = count_nr_1(token);
-                    //if(c > 0){
-                      //  data.push_back(start);
-                    //}
-                    for(int j1=0; j1<c; j1++){
-                        data.push_back("?");
+                    if(c > 0){
+                        data.push_back(start);
+                    }
+                    if(c != 1){
+                      for(int j1=0; j1<c-1; j1++){
+                          data.push_back("?");
+                      }
                     }
                     data.push_back(token);
                     k++;
