@@ -46,6 +46,8 @@ hyperhmm = function(obs,                 # matrix of observations
                     fork=F               # if we're running it, fork to a new process, or keep linear?
                     ) {
   
+  if(simulate == T) {
+    
   # catch various issues
   if(!is.matrix(obs)) { message("Couldn't interpret observations as a matrix!"); return() }
   if(ncol(obs) < 2) { message("Inference with < 2 features is meaningless!"); return() }
@@ -107,7 +109,6 @@ hyperhmm = function(obs,                 # matrix of observations
   write(final.rows, filename)
   
   # create call to HyperHMM
-  if(simulate == T) {
     if(fork == T) {
       syscommand = paste(c("./", commandname, " ", filename, " ", L, " ", nboot, " ", label, " ", cross.sectional, " ", random.walkers, " &"), collapse="")
       message(paste(c("Attempting to externally execute ", syscommand), collapse=""))
@@ -139,6 +140,9 @@ hyperhmm = function(obs,                 # matrix of observations
   
   message("All expected files found.")
   L = nrow(mean.table)
+  if(simulate == F) {
+    features = rep("", L)
+  }
   # pull the wide output data into long format
   stats.df = data.frame(feature=rep(0,L*L), order=rep(0,L*L), mean=rep(0, L*L), sd=rep(0, L*L))
   index = 1
