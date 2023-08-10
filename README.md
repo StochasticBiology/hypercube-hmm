@@ -1,12 +1,14 @@
 # hypercube-hmm
 Hypercubic inference using Hidden Markov Models
 
-Code to infer the transition probabilities on a hypercubic transition network given some observations of emitted signals from a hidden Markov model on that network. Visualisations of the inferred parameterised model and its summary dynamics are also performed. This is the expectation-maximisation cousin of HyperTraPS https://github.com/StochasticBiology/HyperTraPS (simple implementation here https://github.com/StochasticBiology/hypertraps-simple).
+Code for HyperHMM [1] to infer the transition probabilities on a hypercubic transition network given some observations of emitted signals from a hidden Markov model on that network. Visualisations of the inferred parameterised model and its summary dynamics are also performed. This is the expectation-maximisation cousin of HyperTraPS https://github.com/StochasticBiology/HyperTraPS (simple implementation here https://github.com/StochasticBiology/hypertraps-simple).
+
+We also compare the behaviour of HyperHMM with HyperTraPS [2,3], Oncotrees [4], conjunctive Bayes networks (CBN) via TRONCO [5], and mutual hazard networks (MHN) [6].
 
 Requirements
 -------
 
-The inference code uses the C++ `armadillo` library [1]. Other visualisations use R libraries `stringr` [6], `ggplot2` [7], `ggrepel` [8], `gridExtra` [9], and `igraph` [10].
+The inference code uses the C++ `armadillo` library [7]. Other visualisations use R libraries `stringr` [8], `ggplot2` [9], `ggrepel` [10], `gridExtra` [11], and `igraph` [12].
 
 Contents
 =======
@@ -53,7 +55,7 @@ The code outputs wide-format datafiles storing the mean and bootstrap standard d
 
 Data
 ------
-Synthetic and published data is in `Data`. The ovarian cancer dataset is from [11]; the tuberculosis dataset is from [12].
+Synthetic and published data is in `Data`. The ovarian cancer dataset is from [13]; the tuberculosis dataset is from [14].
 
 For cross-sectional observations, data should be provided as a single-column file where each row gives an independent snapshot observation of length L, for example
 
@@ -81,23 +83,35 @@ The code base includes several R scripts that "wrap" external calls to HyperHMM,
 
 The analyses and figures in the associated manuscript are reproduced with the various `...-start.R` and `...-retrieve.R` scripts. If you want to run these, pull the `Data/` contents into the working directory first.
 
+Specifically, `double-approach-....R` compares HyperHMM and HyperTraPS, and `other-approaches-....R` compares HyperHMM, HyperTraPS, Oncotrees, MHN, and CBN (TRONCO).
+
 References
 =====
 
-[1] Conrad Sanderson and Ryan Curtin. Armadillo: a template-based c++ library for linear algebra. Journal of Open Source Software, 1(2):26, 2016.
+[1] Moen, M.T. and Johnston, I.G., 2023. HyperHMM: efficient inference of evolutionary and progressive dynamics on hypercubic transition graphs. Bioinformatics, 39(1), p.btac803.
 
-[2-5] redundant references from previous document
+[2] Johnston, I.G. and Williams, B.P., 2016. Evolutionary inference across eukaryotes identifies specific pressures favoring mitochondrial gene retention. Cell systems, 2(2), pp.101-111.
 
-[6] Hadley Wickham. stringr: Simple, Consistent Wrappers for Common String Operations, 2019. R package version 1.4.0.
+[3] Greenbury, S.F., Barahona, M. and Johnston, I.G., 2020. HyperTraPS: inferring probabilistic patterns of trait acquisition in evolutionary and disease progression pathways. Cell systems, 10(1), pp.39-51.
 
-[7] Hadley Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.
+[4] Szabo,A. and Pappas,L. (2022) Oncotree: Estimating Oncogenetic Trees. R package version 0.3.4.
 
-[8] Kamil Slowikowski. ggrepel: Automatically Position Non-Overlapping Text Labels with ’ggplot2’, 2021. R package version 0.9.1.
+[5] De Sano,L. et al. (2016) TRONCO: an R package for the inference of cancer progression models from heterogeneous genomic data. Bioinformatics, 32, 1911–1913.
 
-[9] Baptiste Auguie. gridExtra: Miscellaneous Functions for ”Grid” Graphics, 2017. R package version 2.3.
+[6] Schill,R. et al. (2020) Modelling cancer progression using mutual hazard networks. Bioinformatics, 36, 241–249.
 
-[10] Gabor Csardi and Tamas Nepusz. The igraph software package for complex network research. InterJournal, Complex Systems:1695, 2006.
+[7] Conrad Sanderson and Ryan Curtin. Armadillo: a template-based c++ library for linear algebra. Journal of Open Source Software, 1(2):26, 2016.
 
-[11] Turid Knutsen et al. The interactive online sky/m-fish & cgh database and the entrez cancer chromosomes search database: linkage of chromosomal aberrations with the genome sequence. Genes, Chromosomes and Cancer, 44(1):52–64, 2005.
+[8] Hadley Wickham. stringr: Simple, Consistent Wrappers for Common String Operations, 2019. R package version 1.4.0.
 
-[12] Nicola Casali et al. Evolution and transmission of drug-resistant tuberculosis in a russian population. Nature genetics, 46(3):279–286, 2014.
+[9] Hadley Wickham. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016.
+
+[10] Kamil Slowikowski. ggrepel: Automatically Position Non-Overlapping Text Labels with ’ggplot2’, 2021. R package version 0.9.1.
+
+[11] Baptiste Auguie. gridExtra: Miscellaneous Functions for ”Grid” Graphics, 2017. R package version 2.3.
+
+[12] Gabor Csardi and Tamas Nepusz. The igraph software package for complex network research. InterJournal, Complex Systems:1695, 2006.
+
+[13] Turid Knutsen et al. The interactive online sky/m-fish & cgh database and the entrez cancer chromosomes search database: linkage of chromosomal aberrations with the genome sequence. Genes, Chromosomes and Cancer, 44(1):52–64, 2005.
+
+[14] Nicola Casali et al. Evolution and transmission of drug-resistant tuberculosis in a russian population. Nature genetics, 46(3):279–286, 2014.
