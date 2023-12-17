@@ -773,11 +773,12 @@ Input variables:
 Output:
 All the cross-sectional data in the "data" vector
 */
-void import_data(string file_name, vector<string>& data){
+void import_data(string file_name, vector<string>& data, int *len){
     std::ifstream in(file_name);
     std::string str;
     while(std::getline(in, str)){
         if(str.size()>0){
+	  (*len) = str.size();
             data.push_back(str);
         }
     }
@@ -812,13 +813,22 @@ Input variables:
 Output:
 All the longitudinal data in the "data" vector and the count in data_count
 */
-void import_data_long2(string file_name, vector<string>& data, vector<int>& data_count, int L){
+void import_data_long2(string file_name, vector<string>& data, vector<int>& data_count, int *L){
     std::ifstream in(file_name);
     int c;
     string str;
     string start = "0";
     string end = "1";
-    for(int l=0; l<L-1; l++){
+    string word;
+    
+    std::getline(in, str);
+    stringstream spls(str);
+    spls >> word;
+(*L) = word.size();
+ in.seekg(0);
+
+     
+for(int l=0; l<(*L)-1; l++){
         start += "0";
         end += "1";
     }
@@ -848,7 +858,7 @@ void import_data_long2(string file_name, vector<string>& data, vector<int>& data
                     }
                     data.push_back(token);
                     if(c2 < token.size()){
-                        for(int j3=c2; j3<L-1; j3++){
+		      for(int j3=c2; j3<(*L)-1; j3++){
                             data.push_back("?");
                         }
                         data.push_back(end);
@@ -1063,12 +1073,17 @@ Input variables:
 Output:
 Two files containing the mean of the random walkers and the standard deviation
 */
-void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::cube& sd, string name, double& time, int rw_boot){
+void do_bootstrap(string file_name, int n_boot, string name, double& time, int rw_boot){
     vector<string> data;
     vector<string> data_bw;
-    import_data(file_name, data);
+    int L;
+    
+    import_data(file_name, data, &L);
 
     double time_itr = 0.;
+
+  arma::cube mean(L,L,n_boot+1,arma::fill::zeros);
+  arma::cube sd(L,L,n_boot+1,arma::fill::zeros);
 
 
     vector<string> data_unique;
@@ -1186,12 +1201,19 @@ void do_bootstrap(string file_name, int n_boot, int L, arma::cube& mean, arma::c
 
 
 
-void do_bootstrap2(string file_name, int n_boot, int L, arma::cube& mean, arma::cube& sd, string name, double& time, int rw_boot){
+void do_bootstrap2(string file_name, int n_boot, string name, double& time, int rw_boot){
     vector<string> data;
     vector<int> data_count;
-    import_data_long2(file_name, data, data_count, L);
+    int L;
+    
+    import_data_long2(file_name, data, data_count, &L);
 
     int itr = 0;
+
+    cout << "Found " << L << " features\n";
+			     
+      arma::cube mean(L,L,n_boot+1,arma::fill::zeros);
+  arma::cube sd(L,L,n_boot+1,arma::fill::zeros);
 
     arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
     arma::vec A_row_ptr(pow(2,L)+1, arma::fill::zeros);
@@ -1325,20 +1347,15 @@ int main(int argc, char** argv){
     return 1;
   }
 
-  L = atoi(argv[2]);
   n_boot = atoi(argv[3]);
   rw_boot = atoi(argv[6]);
 
 
-
-  arma::cube mean(L,L,n_boot+1,arma::fill::zeros);
-  arma::cube sd(L,L,n_boot+1,arma::fill::zeros);
-
   if(atoi(argv[5]) == 1){
-    do_bootstrap(argv[1], n_boot, L, mean, sd, argv[4], time, rw_boot);
+    do_bootstrap(argv[1], n_boot, argv[4], time, rw_boot);
   }
   else if(atoi(argv[5]) == 0){
-    do_bootstrap2(argv[1], n_boot, L, mean, sd, argv[4], time, rw_boot);
+    do_bootstrap2(argv[1], n_boot, argv[4], time, rw_boot);
   }
 
   //cout << "The time it took to run the algorithm with " << n_boot << " bootstrap(s): " << time/(n_boot+1) << endl;
