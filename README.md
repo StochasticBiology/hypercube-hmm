@@ -28,14 +28,12 @@ library(RcppArmadillo)
 sourceCpp("hyperhmm-r.cpp")
 ```
 
-`library(Rcpp)`<br>
-`library(RcppArmadillo)`<br>
-`sourceCpp("hyperhmm-r.cpp")`
-
 The function `HyperHMM`, described further below, performs inference given (at least) a matrix of observations. For example,
 
-`m = matrix(c(0,0,1,0,1,1), byrow=TRUE, ncol=3)`<br>
-`HyperHMM(m)`
+```
+m = matrix(c(0,0,1,0,1,1), byrow=TRUE, ncol=3)
+HyperHMM(m)
+```
 
 Have a look at `hyperhmm-demos.R` for some examples.
 
