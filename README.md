@@ -1,6 +1,8 @@
 # hypercube-hmm
 Hypercubic inference using Hidden Markov Models
 
+![image](https://github.com/StochasticBiology/hypercube-hmm/assets/50171196/893b96c8-12ec-4511-b314-567955870ab2)
+
 Code for HyperHMM [1] to infer the transition probabilities on a hypercubic transition network given some observations of emitted signals from a hidden Markov model on that network. Visualisations of the inferred parameterised model and its summary dynamics are also performed. This is the expectation-maximisation cousin of HyperTraPS https://github.com/StochasticBiology/HyperTraPS (simple implementation here https://github.com/StochasticBiology/hypertraps-simple).
 
 We also compare the behaviour of HyperHMM with HyperTraPS [2,3], Oncotrees [4], conjunctive Bayes networks (CBN) via TRONCO [5], and mutual hazard networks (MHN) [6].
