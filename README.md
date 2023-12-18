@@ -22,6 +22,12 @@ _In R:_
 
 Make sure you have the `Rcpp` and `RcppArmadillo` libraries installed. Then you can access HyperHMM functionality with
 
+```
+library(Rcpp)
+library(RcppArmadillo)
+sourceCpp("hyperhmm-r.cpp")
+```
+
 `library(Rcpp)`<br>
 `library(RcppArmadillo)`<br>
 `sourceCpp("hyperhmm-r.cpp")`
