@@ -1087,14 +1087,8 @@ void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma:
   Output:
   Two files containing the mean of the random walkers and the standard deviation
 */
-void run_inference(string file_name, int n_boot, string name, double& time, int rw_boot){
-  vector<string> data;
+void run_inference(vector<string>& data, int L, int n_boot, string name, double& time, int rw_boot){
   vector<string> data_bw;
-  int L;
-    
-  import_data(file_name, data, &L);
-
-  cout << "From " << file_name << " I read " << data.size() << " entries and am assuming " << L << " features\n\n";
     
   double time_itr = 0.;
 
@@ -1222,16 +1216,8 @@ void run_inference(string file_name, int n_boot, string name, double& time, int 
 
 
 
-void run_inference_longitudinal(string file_name, int n_boot, string name, double& time, int rw_boot){
-  vector<string> data;
-  vector<int> data_count;
-  int L;
-    
-  import_data_long2(file_name, data, data_count, &L);
-
+void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, int L, int n_boot, string name, double& time, int rw_boot){
   int itr = 0;
-
-  cout << "From " << file_name << " I read " << data.size() << " entries and am assuming " << L << " features\n\n";
 			     
   arma::cube mean(L,L,n_boot+1,arma::fill::zeros);
   arma::cube sd(L,L,n_boot+1,arma::fill::zeros);
@@ -1373,7 +1359,9 @@ int main(int argc, char** argv){
   double time;
   int i;
   int oldform = 0;
-
+  vector<string> data;
+  vector<int> data_count;
+  
   n_boot = 100;
   fullsample = 0;
   strcpy(obsfile, "");
@@ -1444,12 +1432,15 @@ int main(int argc, char** argv){
   printf("  nboot: %i\n", n_boot);
   printf("  fullsample: %i\n\n", rw_boot);
         
-
   if(cross_sectional == 1){
-    run_inference(obsfile, n_boot, labelstr, time, rw_boot);
+    import_data(obsfile, data, &L);
+    cout << "From " << obsfile << " I read " << data.size() << " entries and am assuming " << L << " features\n\n";
+    run_inference(data, L, n_boot, labelstr, time, rw_boot);
   }
   else if(cross_sectional == 0){
-    run_inference_longitudinal(obsfile, n_boot, labelstr, time, rw_boot);
+    import_data_long2(obsfile, data, data_count, &L);
+    cout << "From " << obsfile << " I read " << data.size() << " entries and am assuming " << L << " features\n\n";
+    run_inference_longitudinal(data, data_count, L, n_boot, labelstr, time, rw_boot);
   }
 
 
