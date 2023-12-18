@@ -15,13 +15,15 @@ m = matrix(c(0,0,1,0,1,1), byrow=TRUE, ncol=3)
 # do inference
 fitted = HyperHMM(m)
 
-# convert output transition set to previous format
-#str.trans = apply(fitted[[4]], 1, paste, collapse=" ")
-
-# produce a set of plots
+# produce a set of plots. here we use a syntax to demonstrate back-compatibility
 plot.bubs = plot.bubbles2(fitted[[1]], formatted=TRUE)
 plot.cube = plot.hypercube2(fitted[[4]], use.width = T, node.labels=F, seg.labels = T, threshold=0, rotate.phi=F)
 plot.diag = plot.pfg(fitted[[4]], pfg.layout="matrix")
+# and here slightly more intuitively referencing the named elements of the returned list
+plot.bubs = plot.bubbles2(fitted$stats, formatted=TRUE)
+plot.cube = plot.hypercube2(fitted$viz, use.width = T, node.labels=F, seg.labels = T, threshold=0, rotate.phi=F)
+plot.diag = plot.pfg(fitted$viz, pfg.layout="matrix")
+
 # and arrange plots together
 ggarrange(plot.bubs, plot.cube, plot.diag, nrow=1)
 
