@@ -160,7 +160,6 @@ int row_col_to_idx(int r, int c, arma::vec row_ptr, arma::vec col_idx){
   - Updated versions of n_states, cumulative_states, and states.
 */
 void states_at_time_t(vector<int>& n_states, vector<int>& cumulative_states, vector<int>& states, int L){
-  int index = 0;
   vector<int> count;
   string binary;
 
@@ -214,9 +213,7 @@ void states_at_time_t(vector<int>& n_states, vector<int>& cumulative_states, vec
   - Updated versions of n_from, cumulative_from, from, and cor_row.
 */
 void possible_transitions_from(vector<int>& n_from, vector<int>& cumulative_from, vector<int>& from, vector<int>& cor_row, int L, arma::vec row_ptr, arma::vec col_idx){
-  int index = 0;
-  int end_node_int, value;
-  double time = 0.;
+  int end_node_int;
   string end_node;
   // loop through all vertices using integers for convenience
   for(int i = 0; i < mypow2(L); i++){
@@ -254,15 +251,6 @@ void possible_transitions_from(vector<int>& n_from, vector<int>& cumulative_from
 
 }
 
-
-
-
-
-
-
-
-
-
 /*
   A function for creating numerous lists with information about the possible states to go to from a given state.
   Input variables (All of the vectors needs to be empty as input):
@@ -274,7 +262,6 @@ void possible_transitions_from(vector<int>& n_from, vector<int>& cumulative_from
   - Updated versions of n_partners, cumulative_partners, and partners.
 */
 void possible_transitions(vector<int>& n_partners, vector<int>& cumulative_partners, vector<int>& partners, int L){
-  int index = 0;
   int end_node_int;
   string end_node;
   //Loop through all the states
@@ -320,13 +307,13 @@ void possible_transitions(vector<int>& n_partners, vector<int>& cumulative_partn
 */
 void forward_prob(arma::mat& alpha, arma::vec A_val, arma::vec A_row_ptr, arma::vec A_col_idx, vector<string> O, vector<int> n_from, vector<int> c_from, vector<int> from, vector<int> cor_row, vector<int> n_states, vector<int> c_states, vector<int> states){
   int T = O.size();
-  int n = mypow2(T-1);
   double tmp = 0.;
   int start_state;
 
   //Add the initial state value
   //alpha(0,0) = 1.;
 
+  // CHECK FOR BUGS, uninitialised start_state
   int t_start = 0;
   for(int i=0; i<T-1; i++){
     string time_i = O[i];
@@ -401,8 +388,6 @@ void backward_prob(arma::mat& beta, arma::vec A_val, arma::vec A_row_ptr, arma::
   int T = O.size();
   int n = mypow2(T-1);
 
-  double time2 = 0.;
-
   //Add all values to the last row
   for(int i=0;i<n;i++){
     beta(T-1, i) = 1.;
@@ -417,7 +402,6 @@ void backward_prob(arma::mat& beta, arma::vec A_val, arma::vec A_row_ptr, arma::
       int start_i = c_states[t-1];
       for(int i=0; i<n_states[t]; i++){
 	int i2 = states[start_i+i];
-	int start_idx = c_partners[i2];
 	//Loop through all the possible states to go to from state i.
 	for(int j = A_row_ptr[i2]; j<A_row_ptr[i2+1]; j++){
 	  beta(t,i2) += A_val(j) * beta(t+1, A_col_idx(j));
@@ -456,11 +440,8 @@ void ksi_prob(arma::vec& ksi, arma::mat alpha, arma::mat beta, arma::vec A_val, 
   int T = O.size();
   int n = mypow2(T-1);
   double prob_obs = 0.;
-  bool begin_calc = false;
   int idx;
   double prod;
-
-  double time = 0.;
 
   prob_obs = alpha(T-1, n-1);
 
@@ -502,7 +483,6 @@ void ksi_prob(arma::vec& ksi, arma::mat alpha, arma::mat beta, arma::vec A_val, 
     }
     else if(time_i.length() > T-3){ //Check if the first observation is known.
       int i = binary2int(time_i, T-1);
-      int start_idx = c_partners[i];
       prod = prod1 * alpha(t,i);
       for(int j = A_row_ptr[i]; j<A_row_ptr[i+1]; j++){
 	ksi(j) += A_val(j)*beta(t+1,A_col_idx(j)) * prod;
@@ -521,7 +501,6 @@ void ksi_prob(arma::vec& ksi, arma::mat alpha, arma::mat beta, arma::vec A_val, 
       int start_i = c_states[t-1];
       for(int i=0; i<n_states[t]; i++){
 	int i2 = states[start_i+i];
-	int start_idx = c_partners[i2];
 	prod = prod1 * alpha(t,i2);
 	for(int j = A_row_ptr[i2]; j<A_row_ptr[i2+1]; j++){
 	  ksi(j) += prod * A_val(j)*beta(t+1,A_col_idx(j));
@@ -557,8 +536,6 @@ void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_i
   double time_beta = 0.;
   double time_ksi = 0.;
   double time_update = 0.;
-
-  double time = 0.;
 
   int n = mypow2(L);
   //int itr = 0;
@@ -632,15 +609,12 @@ void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_i
     auto t_update = std::chrono::high_resolution_clock::now();
     //Loop thorugh and update all the transition probabilities
     for(int k=0; k<mypow2(L); k++){
-      int n_end_vertices = n_partners[k];
       double ksi_sum2 = 0.;
       int r = A_row_ptr(k);
       for(int i=0; i<A_row_ptr(k+1)-r; i++){
 	ksi_sum2 += ksi_sum(r+i);
       }
       int r2 = A_row_ptr(k+1)-r;
-      double st = 0.;
-      int u=0;
       for(int l=A_row_ptr(k); l<A_row_ptr(k+1); l++){
 	if(ksi_sum2 == 0){
 	  A_val(l) = 1./r2;
@@ -681,7 +655,6 @@ double random_zero_to_one(){
   // std::seed_seq ss{uint32_t(timeSeed & 0xffffffff), uint32_t(timeSeed>>32)};
   // rng.seed(ss);
   std::uniform_real_distribution<double> unif(0, 1);
-  const int nSimulations = 10;
   double currentRandomNumber = unif(rng);
   return currentRandomNumber;
 }
@@ -722,7 +695,6 @@ void random_walkers(arma::mat& rw, int n_walkers, arma::vec A_val, arma::vec A_r
   vector<int> partners;
 
   possible_transitions(n_partners, c_partners, partners, n_traits);
-  double time2 = 0.;
   //Loop through the number of random walkers
   for(int i=0; i<n_walkers; i++){
     int t = 0;
@@ -1055,7 +1027,7 @@ void sd_cube_slices(arma::cube C, arma::mat& sd_C, int n_slices, arma::mat mean)
 #ifndef _USE_CODE_FOR_R
 void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma::vec A_row_ptr, arma::vec A_col_idx, int n_traits){
   #else
-DataFrame graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma::vec A_row_ptr, arma::vec A_col_idx, int n_traits){
+CharacterVector graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma::vec A_row_ptr, arma::vec A_col_idx, int n_traits){
   #endif
 
   vector<int> n_partners;
@@ -1068,7 +1040,7 @@ DataFrame graph_visualization(string file_name, int n_walkers, arma::vec A_val, 
   std::ofstream myfile;
   myfile.open(file_name);
   #else
-  CharacterVector froms_v(n_walkers*n_traits), tos_v(n_walkers*n_traits);
+  CharacterVector trans_v(n_walkers*n_traits); //froms_v(n_walkers*n_traits), tos_v(n_walkers*n_traits);
   #endif
   //Loop through the number of random walkers
   for(int i=0; i<n_walkers; i++){
@@ -1085,15 +1057,15 @@ DataFrame graph_visualization(string file_name, int n_walkers, arma::vec A_val, 
 	choice += 1;
 	prob += A_val(row_col_to_idx(state, partners[start_idx+choice], A_row_ptr, A_col_idx));
       }
-      int change = num2binlength(partners[start_idx+choice]-state)-1;
       int choice2 = partners[start_idx+choice];
       #ifndef _USE_CODE_FOR_R
       myfile << number2binary(state, n_traits) << " " << number2binary(choice2, n_traits) << endl;
       #else
-      if(t < n_traits) {
+      /*      if(t < n_traits) {
        froms_v[i*n_traits + t] = number2binary(state, n_traits);
        tos_v[i*n_traits + t] = number2binary(choice2, n_traits);
-      }
+       }*/
+      trans_v[i*n_traits + t] = number2binary(state, n_traits)+" "+number2binary(choice2, n_traits);
       #endif
       t += 1;
       state = partners[start_idx+choice];
@@ -1102,11 +1074,11 @@ DataFrame graph_visualization(string file_name, int n_walkers, arma::vec A_val, 
   }
   #ifndef _USE_CODE_FOR_R
   #else
- List Lviz = List::create(Named("froms") = froms_v,
-    Named("tos") = tos_v);
- DataFrame Lvizdf(Lviz);
- 
- return(Lvizdf);
+  /* List Lviz = List::create(Named("froms") = froms_v,
+     Named("tos") = tos_v);*/
+  // DataFrame Lvizdf(Lviz);
+  //List Lviz = List::create(Named("tran
+ return(trans_v);
 
  #endif
 }
@@ -1161,7 +1133,7 @@ List run_inference(vector<string>& data, int L, int n_boot, string name, double&
   #ifndef _USE_CODE_FOR_R
   graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
   #else
-  DataFrame Lvizdf = graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
+  CharacterVector Lvizcv = graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
   #endif
   
   arma::mat rw(L,L, arma::fill::zeros);
@@ -1268,8 +1240,8 @@ List run_inference(vector<string>& data, int L, int n_boot, string name, double&
   Rprintf("storing means\n");  
   for(int m=0; m<L; m++){
     for(int n=0; n<L; n++){
-      feature_v.push_back(m);
-      order_v.push_back(n);
+      feature_v.push_back(L-m);
+      order_v.push_back(n+1);
       mean_v.push_back(mean_slices(m,n));
     }
   }
@@ -1310,7 +1282,7 @@ List run_inference(vector<string>& data, int L, int n_boot, string name, double&
   List Lout = List::create(Named("stats") = Lstatsdf,
 			   Named("transitions") = Lfluxdf,
 			   Named("features") = 0,
-			   Named("viz") = Lvizdf);
+			   Named("viz") = Lvizcv);
 
   return Lout;
   #endif
@@ -1346,7 +1318,7 @@ List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
   #ifndef _USE_CODE_FOR_R
   graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
   #else
-  DataFrame Lvizdf = graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
+  CharacterVector Lvizcv = graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
 #endif
   
   cout << "Mean ordering matrix from sampling:\n";
@@ -1440,8 +1412,8 @@ List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
   Rprintf("storing means\n");  
   for(int m=0; m<L; m++){
     for(int n=0; n<L; n++){
-      feature_v.push_back(m);
-      order_v.push_back(n);
+      feature_v.push_back(L-m);
+      order_v.push_back(n+1);
       mean_v.push_back(mean_slices(m,n));
     }
   }
@@ -1482,7 +1454,7 @@ List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
   List Lout = List::create(Named("stats") = Lstatsdf,
 			   Named("transitions") = Lfluxdf,
 			   Named("features") = 0,
-			   Named("viz") = Lvizdf);
+			   Named("viz") = Lvizcv);
 
   return Lout;
   #endif
@@ -1644,6 +1616,11 @@ List HyperHMM(NumericMatrix obs,
   int L, ntarg;
 
   Rprintf("== HyperHMM ==\n\nPlease cite Moen, M.T. and Johnston, I.G., 2023. HyperHMM: efficient inference of evolutionary and progressive dynamics on hypercubic transition graphs. Bioinformatics, 39(1), p.btac803.\n\n");
+
+    if(initialstates.isUsable())
+      _longitudinal = 1;
+    else
+      _longitudinal = 0;
 
   Rprintf("Attempting to run HyperHMM with the following parameters:\n");
   Rprintf("  cross-sectional: %i\n", 1-_longitudinal);
