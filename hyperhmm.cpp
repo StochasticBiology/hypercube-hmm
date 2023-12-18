@@ -827,7 +827,7 @@ int count_nr_1(string binary){
   Output:
   All the longitudinal data in the "data" vector and the count in data_count
 */
-void import_data_long2(string file_name, vector<string>& data, vector<int>& data_count, int *L){
+void import_data_longitudinal(string file_name, vector<string>& data, vector<int>& data_count, int *L){
 
   int c;
   string str;
@@ -1087,7 +1087,12 @@ void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma:
   Output:
   Two files containing the mean of the random walkers and the standard deviation
 */
-void run_inference(vector<string>& data, int L, int n_boot, string name, double& time, int rw_boot){
+#ifndef _USE_CODE_FOR_R
+void run_inference(vector<string>& data, int L, int n_boot, string name, double& time, int rw_boot) {
+  #else
+List run_inference(vector<string>& data, int L, int n_boot, string name, double& time, int rw_boot) {
+  #endif
+    
   vector<string> data_bw;
     
   double time_itr = 0.;
@@ -1131,12 +1136,12 @@ void run_inference(vector<string>& data, int L, int n_boot, string name, double&
 
   //Write the maximum likelihood values to file
 
-
-  #ifndef _USE_CODE_FOR_R
   vector<int> n_partners;
   vector<int> c_partners;
   vector<int> partners;
   possible_transitions(n_partners, c_partners, partners, L);
+
+  #ifndef _USE_CODE_FOR_R
   std::ofstream myfile3;
   myfile3.open("transitions_" + name + ".txt");
   myfile3 << "From " << "To " << "Probability" << endl;
@@ -1152,7 +1157,20 @@ void run_inference(vector<string>& data, int L, int n_boot, string name, double&
     }
   }
   #else
-  
+  NumericVector from_v, to_v, prob_v;
+  int k = 0, c=0;
+  for(int i=0; i<mypow2(L); i++){
+    int n_end_vertices = n_partners[i];
+    int r = A_row_ptr(i);
+    c = 0;
+    for(int j=0; j<n_end_vertices; j++){
+      int j2 = partners[k];
+      from_v.push_back(i);
+      to_v.push_back(j2);
+      prob_v.push_back(A_val(r+c));
+      k ++, c++;
+    }
+  }
   #endif
 
   cout << "Running bootstrap resamples\n";
@@ -1205,8 +1223,16 @@ void run_inference(vector<string>& data, int L, int n_boot, string name, double&
     }
     myfile << "\n";
   }
+  #else
+  NumericMatrix mean_m(L, L);
+  for(int m=0; m<L; m++){
+    for(int n=0; n<L; n++){
+      mean_m(m, n) = mean_slices(m,n);
+    }
+  }
+  #endif
 
-
+    #ifndef _USE_CODE_FOR_R
   std::ofstream myfile2;
   myfile2.open("sd_" + name + ".txt");
 
@@ -1217,6 +1243,20 @@ void run_inference(vector<string>& data, int L, int n_boot, string name, double&
     myfile2 << "\n";
   }
   #else
+  NumericMatrix sd_m(L, L);
+  for(int m=0; m<L; m++){
+    for(int n=0; n<L; n++){
+      sd_m(m, n) = sd_slices(m,n);
+    }
+  }
+ List Lflux = List::create(Named("From") = from_v,
+			    Named("To") = to_v,
+			   Named("Probability") = prob_v);
+  DataFrame Lfluxdf(Lflux);
+  
+  List Lout = List::create(Named("transitions") = Lfluxdf, Named("means") = mean_m, Named("sds") = sd_m);
+
+  return Lout;
   #endif
 
 }
@@ -1224,8 +1264,12 @@ void run_inference(vector<string>& data, int L, int n_boot, string name, double&
 
 
 
-
+#ifndef _USE_CODE_FOR_R
 void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, int L, int n_boot, string name, double& time, int rw_boot){
+#else
+List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, int L, int n_boot, string name, double& time, int rw_boot){
+#endif
+  
   int itr = 0;
 			     
   arma::cube mean(L,L,n_boot+1,arma::fill::zeros);
@@ -1245,7 +1289,7 @@ void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
 
   #ifndef _USE_CODE_FOR_R
   graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
-#else
+  #else
   #endif
   
   cout << "Mean ordering matrix from sampling:\n";
@@ -1275,6 +1319,20 @@ void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
     }
   }
   #else
+  NumericVector from_v, to_v, prob_v;
+  int k = 0, c=0;
+  for(int i=0; i<mypow2(L); i++){
+    int n_end_vertices = n_partners[i];
+    int r = A_row_ptr(i);
+    c = 0;
+    for(int j=0; j<n_end_vertices; j++){
+      int j2 = partners[k];
+      from_v.push_back(i);
+      to_v.push_back(j2);
+      prob_v.push_back(A_val(r+c));
+      k ++, c++;
+    }
+  }
   #endif
 
   for(int i=0; i<n_boot; i++){
@@ -1319,8 +1377,16 @@ void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
     }
     myfile << "\n";
   }
+ #else
+  NumericMatrix mean_m(L, L);
+  for(int m=0; m<L; m++){
+    for(int n=0; n<L; n++){
+      mean_m(m, n) = mean_slices(m,n);
+    }
+  }
+  #endif
 
-
+   #ifndef _USE_CODE_FOR_R
   std::ofstream myfile2;
   myfile2.open("sd_" + name + ".txt");
 
@@ -1330,9 +1396,22 @@ void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
     }
     myfile2 << "\n";
   }
-  #else
-  #endif
+   #else
+  NumericMatrix sd_m(L, L);
+  for(int m=0; m<L; m++){
+    for(int n=0; n<L; n++){
+      sd_m(m, n) = sd_slices(m,n);
+    }
+  }
+ List Lflux = List::create(Named("From") = from_v,
+			    Named("To") = to_v,
+			   Named("Probability") = prob_v);
+  DataFrame Lfluxdf(Lflux);
+  
+  List Lout = List::create(Named("transitions") = Lfluxdf, Named("means") = mean_m, Named("sds") = sd_m);
 
+  return Lout;
+  #endif
 }
 
 
@@ -1456,7 +1535,7 @@ int main(int argc, char** argv){
     run_inference(data, L, n_boot, labelstr, time, rw_boot);
   }
   else if(cross_sectional == 0){
-    import_data_long2(obsfile, data, data_count, &L);
+    import_data_longitudinal(obsfile, data, data_count, &L);
     cout << "From " << obsfile << " I read " << data.size() << " entries and am assuming " << L << " features\n\n";
     run_inference_longitudinal(data, data_count, L, n_boot, labelstr, time, rw_boot);
   }
@@ -1466,3 +1545,4 @@ int main(int argc, char** argv){
   //cout << "Average rutime per iteration with " << n_boot << " bootstrap(s): " << time/(n_boot+1) << endl;
   return 0;
 }
+
