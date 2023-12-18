@@ -1507,10 +1507,9 @@ int main(int argc, char** argv){
 	{
 	  sprintf(labelstr, "%s-out", obsfile);
 	}
-      rng.seed(seed);
-  
     }
 
+  rng.seed(seed);
   
   if(strcmp(obsfile, "") == 0)
     {

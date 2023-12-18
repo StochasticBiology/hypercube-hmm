@@ -1371,7 +1371,6 @@ List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
     }
 
   }
-
   arma::mat mean_slices(L,L, arma::fill::zeros);
   mean_cube_slices(mean, mean_slices, n_boot+1);
 
@@ -1519,10 +1518,9 @@ int main(int argc, char** argv){
 	{
 	  sprintf(labelstr, "%s-out", obsfile);
 	}
-      rng.seed(seed);
-  
     }
 
+  rng.seed(seed);
   
   if(strcmp(obsfile, "") == 0)
     {
@@ -1562,25 +1560,39 @@ List HyperHMM(NumericMatrix obs,
 	      Nullable<NumericMatrix> initialstates,
 	      NumericVector seed,
 	      NumericVector nboot,
-	      NumericVector fullsample);
+	      NumericVector fullsample,
+	      NumericVector outputinput);
 
 // [[Rcpp::export]]
 List HyperHMM(NumericMatrix obs,
 	      Nullable<NumericMatrix> initialstates = R_NilValue,
 	      NumericVector seed = 1,
 	      NumericVector nboot = 100,
-	      NumericVector fullsample = 1)
+	      NumericVector fullsample = 1,
+	      NumericVector outputinput = 0)
 {
   int _longitudinal;
   int _fullsample = fullsample[0];
   int _nboot = nboot[0];
   int _seed = seed[0];
+  int _outputinput = outputinput[0];
   double time;
   List infout;
   int L, ntarg;
 
+  Rprintf("== HyperHMM ==\n\nPlease cite Moen, M.T. and Johnston, I.G., 2023. HyperHMM: efficient inference of evolutionary and progressive dynamics on hypercubic transition graphs. Bioinformatics, 39(1), p.btac803.\n\n");
+
+  Rprintf("Attempting to run HyperHMM with the following parameters:\n");
+  Rprintf("  cross-sectional: %i\n", 1-_longitudinal);
+  Rprintf("  seed: %i\n", _seed);
+  Rprintf("  nboot: %i\n", _nboot);
+  Rprintf("  fullsample: %i\n\n", _fullsample);
+
+  rng.seed(_seed);
   L = obs.ncol(); ntarg = obs.nrow();
-  Rprintf("Found %i entries with %i features\n", ntarg, L);
+  Rprintf("Found %i entries with %i features.\n", ntarg, L);
+  if(_outputinput)
+    Rprintf("Observations read:\n");
   if(initialstates.isUsable())
     {
       NumericMatrix _initialstates(initialstates);
@@ -1594,25 +1606,29 @@ List HyperHMM(NumericMatrix obs,
       vector<int> data_count;
 
       char tmps[1000];
-      int c;
-      string str;
-      string start = "0";
-      string end = "1";
-      string word;
   
       for(int i = 0; i < obs.nrow(); i++)
 	{
-	  for(int j = 0; j < L; j++)
-	    {
-	      sprintf(tmps, "%i", (int)obs(i,j));
-	      str += tmps[0];
-	    }
-	  str += ' ';
+	  int c;
+	  string start = "0";
+	  string end = "1";
+	  string word;
+	  string str;
+
 	  for(int j = 0; j < L; j++)
 	    {
 	      sprintf(tmps, "%i", (int)_initialstates(i,j));
 	      str += tmps[0];
 	    }
+	  str += ' ';
+	  for(int j = 0; j < L; j++)
+	    {
+	      sprintf(tmps, "%i", (int)obs(i,j));
+	      str += tmps[0];
+	    }
+
+  	  if(_outputinput)
+	    cout << str << "\n";
 
 	  int k = 0;
 	  if(str.size()>0){
@@ -1650,7 +1666,7 @@ List HyperHMM(NumericMatrix obs,
 	    data_count.push_back(1);
 	  }
 	}
-      
+            
       infout = run_inference_longitudinal(data, data_count, L, _nboot, "", time, _fullsample);
     }
   else
@@ -1668,8 +1684,10 @@ List HyperHMM(NumericMatrix obs,
 	    }
 	  //	  printf("\n");
 	  data.push_back(tmp);
-	  //	  cout << tmp << "\n\n";
+	  if(_outputinput)
+	    cout << tmp << "\n";
 	}
+
       infout = run_inference(data, L, _nboot, "", time, _fullsample);
     }
   return infout;
