@@ -31,6 +31,8 @@ The function `HyperHMM`, described further below, performs inference given (at l
 `m = matrix(c(0,0,1,0,1,1), byrow=TRUE, ncol=3)`<br>
 `HyperHMM(m)`
 
+Have a look at `hyperhmm-demos.R` for some examples.
+
 _From the command line:_
 
 You'll need to compile the C++ code. Install the `armadillo` library on your machine, then the command to compile from the Terminal may look something like
@@ -78,6 +80,8 @@ For longitudinal data, a matrix with the same number of rows and columns can be 
 `0001`<br>
 `0011`<br>
 `1001`
+
+Have a look at `hyperhmm-demos.R` for some examples.
 
 _For the command line:_
 
