@@ -65,7 +65,7 @@ The code takes several command-line arguments:
 | Initial states for longitudinal data | initialstates=*matrix* | [in input data, see below] | (none)
 | Longitudinal data? | [implied by initialstates] | --longitudinal | (off) |
 
-The code outputs datafiles describing the maximum likelihood inferred transition probabilities between states (`transitions_labelstring.txt`), wide-format datafiles storing the mean (`mean_labelstring.txt`) and bootstrap standard deviation (`sd_labelstring.txt`), and a set of transitions from sampled trajectories of random walkers simulated on the inferred network (`graph_viz_labelstring.txt`).
+The code outputs several objects. In R, these are elements of a named list that is returned by `HyperHMM`; from the command line, they are datafiles. These objects describe the maximum likelihood inferred transition probabilities between states (`$transitions` in R; `transitions_labelstring.txt` from the command-line), the mean and bootstrap standard deviation (`$stats`; wide-form `mean_labelstring.txt` and `sd_labelstring.txt`), and a set of transitions from sampled trajectories of random walkers simulated on the inferred network (`$viz`; `graph_viz_labelstring.txt`).
 
 Data
 ------
