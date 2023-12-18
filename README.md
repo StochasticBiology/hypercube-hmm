@@ -1,5 +1,5 @@
 # hypercube-hmm
-Hypercubic inference using Hidden Markov Models, from Moen & Johnston, Bioinformatics *39* btac803 (2023): https://academic.oup.com/bioinformatics/article/39/1/btac803/6895098 
+Hypercubic inference using Hidden Markov Models, from https://academic.oup.com/bioinformatics/article/39/1/btac803/6895098 
 
 ![image](https://github.com/StochasticBiology/hypercube-hmm/assets/50171196/893b96c8-12ec-4511-b314-567955870ab2)
 
