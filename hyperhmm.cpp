@@ -1115,7 +1115,12 @@ void run_inference(vector<string>& data, int L, int n_boot, string name, double&
   double duration_seconds = std::chrono::duration<double>(t2 - t1).count(); //Measure time
   time_itr += duration_seconds/itr;
   time += duration_seconds;
+
+  #ifndef _USE_CODE_FOR_R
   graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
+  #else
+  #endif
+  
   arma::mat rw(L,L, arma::fill::zeros);
   random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
 
@@ -1127,6 +1132,7 @@ void run_inference(vector<string>& data, int L, int n_boot, string name, double&
   //Write the maximum likelihood values to file
 
 
+  #ifndef _USE_CODE_FOR_R
   vector<int> n_partners;
   vector<int> c_partners;
   vector<int> partners;
@@ -1145,7 +1151,9 @@ void run_inference(vector<string>& data, int L, int n_boot, string name, double&
       k ++, c++;
     }
   }
-
+  #else
+  
+  #endif
 
   cout << "Running bootstrap resamples\n";
   for(int i=0; i<n_boot; i++){
@@ -1187,7 +1195,7 @@ void run_inference(vector<string>& data, int L, int n_boot, string name, double&
   sd_cube_slices(sd, sd_slices, n_boot+1, mean_slices);
 
 
-
+    #ifndef _USE_CODE_FOR_R
   std::ofstream myfile;
   myfile.open("mean_" + name + ".txt");
 
@@ -1208,7 +1216,8 @@ void run_inference(vector<string>& data, int L, int n_boot, string name, double&
     }
     myfile2 << "\n";
   }
-
+  #else
+  #endif
 
 }
 
@@ -1233,8 +1242,12 @@ void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
   time += duration_seconds;
   arma::mat rw(L,L, arma::fill::zeros);
   random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
-  graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
 
+  #ifndef _USE_CODE_FOR_R
+  graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
+#else
+  #endif
+  
   cout << "Mean ordering matrix from sampling:\n";
   cout << rw << endl;
   mean.slice(0) = rw;;
@@ -1245,6 +1258,8 @@ void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
   vector<int> c_partners;
   vector<int> partners;
   possible_transitions(n_partners, c_partners, partners, L);
+
+  #ifndef _USE_CODE_FOR_R
   std::ofstream myfile3;
   myfile3.open("transitions_" + name + ".txt");
   myfile3 << "From " << "To " << "Probability" << endl;
@@ -1259,6 +1274,8 @@ void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
       k ++, c++;
     }
   }
+  #else
+  #endif
 
   for(int i=0; i<n_boot; i++){
     if(i % (int)(n_boot/10) == 0) {
@@ -1292,7 +1309,7 @@ void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
   sd_cube_slices(sd, sd_slices, n_boot+1, mean_slices);
 
 
-
+  #ifndef _USE_CODE_FOR_R
   std::ofstream myfile;
   myfile.open("mean_" + name + ".txt");
 
@@ -1313,7 +1330,8 @@ void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
     }
     myfile2 << "\n";
   }
-
+  #else
+  #endif
 
 }
 
