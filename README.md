@@ -94,6 +94,16 @@ For longitudinal observations, including those derived from estimated phylogenie
 
 The initial state is assumed to be all `0`s, and the system evolves by acquiring `1`s.
 
+Examples
+------
+_In R:_
+
+| Command | Description |
+|---------|---------|
+| `HyperHMM(m)` | Cross-sectional observations m |
+| `HyperHMM(m.2, initialstates=m.1)` | Longitudinal observations m.1 -> m.2 |
+| `HyperHMM(m, nboot=1000, seed=2)` | As top row with 1000 resamples and random number seed 2 |
+
 Plotting
 ------
 
