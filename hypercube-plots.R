@@ -1,5 +1,11 @@
 # various plots for the output of hypercubic inference (or other approaches coerced to hypercubic format)
 
+library(stringr)
+library(ggplot2)
+library(ggrepel)
+library(ggraph)
+library(gridExtra)
+library(igraph)
 library(gtools)
 
 # redundant? old, less flexible bubble plot function
@@ -379,4 +385,12 @@ plot.hypercube2 = function(translist,               # set of transitions
     
   }
   return(cube.plot)
+}
+
+plot.standard = function(fitted) {
+  plot.bubs = plot.bubbles2(fitted[[1]], formatted=TRUE)
+  plot.cube = plot.hypercube2(fitted[[4]], use.width = T, node.labels=F, seg.labels = T, threshold=0, rotate.phi=F)
+  plot.diag = plot.pfg(fitted[[4]], pfg.layout="matrix")
+  # and arrange plots together
+  return(ggarrange(plot.bubs, plot.cube, plot.diag, nrow=1))
 }

@@ -10,11 +10,30 @@ Requirements
 
 The inference code uses the C++ `armadillo` library [7]. Other visualisations use R libraries `stringr` [8], `ggplot2` [9], `ggrepel` [10], `gridExtra` [11], and `igraph` [12].
 
+The R implementation requires `Rcpp` and `RcppArmadillo`.
+
 Contents
 =======
 
 Examples
 -------
+
+_In R:_
+
+Make sure you have the `Rcpp` and `RcppArmadillo` libraries installed. Then you can access HyperHMM functionality with
+
+`library(Rcpp)`<br>
+`library(RcppArmadillo)`<br>
+`sourceCpp("hyperhmm-r.cpp")`
+
+The function `HyperHMM`, described further below, performs inference given (at least) a matrix of observations. For example,
+
+`m = matrix(c(0,0,1,0,1,1), byrow=TRUE, ncol=3)`<br>
+`HyperHMM(m)`
+
+Have a look at `hyperhmm-demos.R` for some examples.
+
+_From the command line:_
 
 You'll need to compile the C++ code. Install the `armadillo` library on your machine, then the command to compile from the Terminal may look something like
 ```
@@ -34,12 +53,13 @@ The code takes several command-line arguments:
 
 | Argument | R | Command-line | Default |
 |----------|---|--------------|---------|
-| Input data |  | --obs *filename* | None (required) |
-| Label for output files || --label *labelstring* | *filename*-out |
-| Random number seed (for bootstrapping) |  | --seed *N* | 1 |
-| Number of bootstrap resamples | | --nboot *N* | 100 |
-| Simulate random walkers for each resample? | | --fullsample | (off) |
-| Longitudinal data? | | --longitudinal | (off) |
+| Input data | obs=*matrix* | --obs *filename* | None (required) |
+| Label for output files | [none] | --label *labelstring* | *filename*-out |
+| Random number seed (for bootstrapping) | seed=*N* | --seed *N* | 1 |
+| Number of bootstrap resamples | nboot=*N*| --nboot *N* | 100 |
+| Simulate random walkers for each resample? | fullsample=*N* | --fullsample | (off) |
+| Initial states for longitudinal data | initialstates=*matrix* | [in input data, see below] | (none)
+| Longitudinal data? | [implied by initialstates] | --longitudinal | (off) |
 
 The code outputs datafiles describing the maximum likelihood inferred transition probabilities between states (`transitions_labelstring.txt`), wide-format datafiles storing the mean (`mean_labelstring.txt`) and bootstrap standard deviation (`sd_labelstring.txt`), and a set of transitions from sampled trajectories of random walkers simulated on the inferred network (`graph_viz_labelstring.txt`).
 
@@ -47,11 +67,29 @@ Data
 ------
 Synthetic and published data is in `Data`. The ovarian cancer dataset is from [13]; the tuberculosis dataset is from [14].
 
-For cross-sectional observations, data should be provided as a single-column file where each row gives an independent snapshot observation of length L, for example
+_In R:_
+
+Data is provided as a matrix via the required first argument "obs", where each row gives an independent snapshot observation of length L, for example
+
+`0011`<br>
+`0111`<br>
+`1101`
+
+For longitudinal data, a matrix with the same number of rows and columns can be provided describing the initial states for each observation via the argument "initialstates", for example
 
 `0001`<br>
 `0011`<br>
 `1001`
+
+Have a look at `hyperhmm-demos.R` for some examples.
+
+_For the command line:_
+
+For cross-sectional observations, data should be provided as a single-column file where each row gives an independent snapshot observation of length L, for example
+
+`0011`<br>
+`0111`<br>
+`1101`
 
 For longitudinal observations, including those derived from estimated phylogenies, data should be provided as a two-column file where each row gives an independent transition observation between two states of length L, for example
 
@@ -61,15 +99,27 @@ For longitudinal observations, including those derived from estimated phylogenie
 
 The initial state is assumed to be all `0`s, and the system evolves by acquiring `1`s.
 
+Examples
+------
+_In R:_
+
+| Command | Description |
+|---------|---------|
+| `HyperHMM(m)` | Cross-sectional observations m |
+| `HyperHMM(m.2, initialstates=m.1)` | Longitudinal observations m.1 -> m.2 |
+| `HyperHMM(m, nboot=1000, seed=2)` | As top row with 1000 resamples and random number seed 2 |
+
 Plotting
 ------
 
 Plotting is done in R, using functions in `hypercube-plots.R`. These include "bubble" plots for mean feature orderings, hypercube visualisations illustrating the complete transition network, and ordering graphs showing pairwise acquisition orderings.
 
-R wrapping
+Other approaches and manuscript links
 -------
 
-The code base includes several R scripts that "wrap" external calls to HyperHMM, including preparing data and pulling output for plots. This setup is less streamlined than fully integrating HyperHMM into the R environment, but we currently don't have resource for that. The code `hyperhmm-wrap.R` provides a function to call HyperHMM from R; `hypertraps-wrap.R` does the same for HyperTraPS.
+From earlier development, the code base includes several R scripts that "wrap" external calls to HyperHMM, including preparing data and pulling output for plots. This setup was less streamlined than fully integrating HyperHMM into the R environment via Rcpp. There is also code that "wraps" HyperTraPS, and explores other inference approaches. These are now all in the `wrappers` directory and will currently have some path issues relative to the other files.
+
+The code `hyperhmm-wrap.R` provides a function to call HyperHMM from R; `hypertraps-wrap.R` does the same for HyperTraPS.
 
 The analyses and figures in the associated manuscript are reproduced with the various `...-start.R` and `...-retrieve.R` scripts. If you want to run these, pull the `Data/` contents into the working directory first.
 
