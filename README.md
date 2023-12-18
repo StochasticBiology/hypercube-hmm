@@ -10,7 +10,7 @@ Requirements
 
 The inference code uses the C++ `armadillo` library [7]. Other visualisations use R libraries `stringr` [8], `ggplot2` [9], `ggrepel` [10], `gridExtra` [11], and `igraph` [12].
 
-The R implementation requires `Rcpp` and `RcppArmadillo`.
+The R implementation requires `Rcpp` [13] and `RcppArmadillo` [14].
 
 Contents
 =======
@@ -69,7 +69,7 @@ The code outputs several objects. In R, these are elements of a named list that 
 
 Data
 ------
-Synthetic and published data is in `Data`. The ovarian cancer dataset is from [13]; the tuberculosis dataset is from [14].
+Synthetic and published data is in `Data`. The ovarian cancer dataset is from [15]; the tuberculosis dataset is from [16].
 
 _In R:_
 
@@ -175,6 +175,10 @@ References
 
 [12] Gabor Csardi and Tamas Nepusz. The igraph software package for complex network research. InterJournal, Complex Systems:1695, 2006.
 
-[13] Turid Knutsen et al. The interactive online sky/m-fish & cgh database and the entrez cancer chromosomes search database: linkage of chromosomal aberrations with the genome sequence. Genes, Chromosomes and Cancer, 44(1):52–64, 2005.
+[13] Dirk Eddelbuettel and Romain Francois (2011). Rcpp:Seamless R and C++ Integration. Journal of Statistical Software, 40(8), 1-18, <doi:10.18637/jss.v040.i08>.
 
-[14] Nicola Casali et al. Evolution and transmission of drug-resistant tuberculosis in a russian population. Nature genetics, 46(3):279–286, 2014.
+[14] Eddelbuettel D, Sanderson C (2014). “RcppArmadillo: Accelerating R with high-performance C++ linear algebra.” _Computational Statistics and Data Analysis_, *71*, 1054-1063. doi:10.1016/j.csda.2013.02.005 <https://doi.org/10.1016/j.csda.2013.02.005>.
+
+[15] Turid Knutsen et al. The interactive online sky/m-fish & cgh database and the entrez cancer chromosomes search database: linkage of chromosomal aberrations with the genome sequence. Genes, Chromosomes and Cancer, 44(1):52–64, 2005.
+
+[16] Nicola Casali et al. Evolution and transmission of drug-resistant tuberculosis in a russian population. Nature genetics, 46(3):279–286, 2014.
