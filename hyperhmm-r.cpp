@@ -1052,15 +1052,24 @@ void sd_cube_slices(arma::cube C, arma::mat& sd_C, int n_slices, arma::mat mean)
 }
 
 
+#ifndef _USE_CODE_FOR_R
 void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma::vec A_row_ptr, arma::vec A_col_idx, int n_traits){
+  #else
+DataFrame graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma::vec A_row_ptr, arma::vec A_col_idx, int n_traits){
+  #endif
 
   vector<int> n_partners;
   vector<int> c_partners;
   vector<int> partners;
 
   possible_transitions(n_partners, c_partners, partners, n_traits);
+
+  #ifndef _USE_CODE_FOR_R
   std::ofstream myfile;
   myfile.open(file_name);
+  #else
+  CharacterVector froms_v(n_walkers*n_traits), tos_v(n_walkers*n_traits);
+  #endif
   //Loop through the number of random walkers
   for(int i=0; i<n_walkers; i++){
     int t = 0;
@@ -1077,13 +1086,29 @@ void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma:
 	prob += A_val(row_col_to_idx(state, partners[start_idx+choice], A_row_ptr, A_col_idx));
       }
       int change = num2binlength(partners[start_idx+choice]-state)-1;
-      t += 1;
       int choice2 = partners[start_idx+choice];
+      #ifndef _USE_CODE_FOR_R
       myfile << number2binary(state, n_traits) << " " << number2binary(choice2, n_traits) << endl;
+      #else
+      if(t < n_traits) {
+       froms_v[i*n_traits + t] = number2binary(state, n_traits);
+       tos_v[i*n_traits + t] = number2binary(choice2, n_traits);
+      }
+      #endif
+      t += 1;
       state = partners[start_idx+choice];
     }
 
   }
+  #ifndef _USE_CODE_FOR_R
+  #else
+ List Lviz = List::create(Named("froms") = froms_v,
+    Named("tos") = tos_v);
+ DataFrame Lvizdf(Lviz);
+ 
+ return(Lvizdf);
+
+ #endif
 }
 
 
@@ -1136,6 +1161,7 @@ List run_inference(vector<string>& data, int L, int n_boot, string name, double&
   #ifndef _USE_CODE_FOR_R
   graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
   #else
+  DataFrame Lvizdf = graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
   #endif
   
   arma::mat rw(L,L, arma::fill::zeros);
@@ -1236,10 +1262,15 @@ List run_inference(vector<string>& data, int L, int n_boot, string name, double&
     myfile << "\n";
   }
   #else
-  NumericMatrix mean_m(L, L);
+  NumericVector mean_v;
+  NumericVector feature_v;
+  NumericVector order_v;
+  Rprintf("storing means\n");  
   for(int m=0; m<L; m++){
     for(int n=0; n<L; n++){
-      mean_m(m, n) = mean_slices(m,n);
+      feature_v.push_back(m);
+      order_v.push_back(n);
+      mean_v.push_back(mean_slices(m,n));
     }
   }
   #endif
@@ -1255,18 +1286,31 @@ List run_inference(vector<string>& data, int L, int n_boot, string name, double&
     myfile2 << "\n";
   }
   #else
-  NumericMatrix sd_m(L, L);
+  NumericVector sd_v;
+    Rprintf("storing sds\n");  
   for(int m=0; m<L; m++){
     for(int n=0; n<L; n++){
-      sd_m(m, n) = sd_slices(m,n);
+      sd_v.push_back(sd_slices(m,n));
     }
   }
+
+    Rprintf("creating stats\n");  
+  List Lstats = List::create(Named("feature") = feature_v,
+			     Named("order") = order_v,
+			     Named("mean") = mean_v,
+			     Named("sd") = sd_v);
+  DataFrame Lstatsdf(Lstats);
+
+  Rprintf("creating flux\n");  
  List Lflux = List::create(Named("From") = from_v,
 			    Named("To") = to_v,
 			   Named("Probability") = prob_v);
   DataFrame Lfluxdf(Lflux);
-  
-  List Lout = List::create(Named("transitions") = Lfluxdf, Named("means") = mean_m, Named("sds") = sd_m);
+
+  List Lout = List::create(Named("stats") = Lstatsdf,
+			   Named("transitions") = Lfluxdf,
+			   Named("features") = 0,
+			   Named("viz") = Lvizdf);
 
   return Lout;
   #endif
@@ -1302,7 +1346,8 @@ List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
   #ifndef _USE_CODE_FOR_R
   graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
   #else
-  #endif
+  DataFrame Lvizdf = graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
+#endif
   
   cout << "Mean ordering matrix from sampling:\n";
   cout << rw << endl;
@@ -1389,15 +1434,20 @@ List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
     myfile << "\n";
   }
  #else
-  NumericMatrix mean_m(L, L);
+  NumericVector mean_v;
+  NumericVector feature_v;
+  NumericVector order_v;
+  Rprintf("storing means\n");  
   for(int m=0; m<L; m++){
     for(int n=0; n<L; n++){
-      mean_m(m, n) = mean_slices(m,n);
+      feature_v.push_back(m);
+      order_v.push_back(n);
+      mean_v.push_back(mean_slices(m,n));
     }
   }
   #endif
 
-   #ifndef _USE_CODE_FOR_R
+    #ifndef _USE_CODE_FOR_R
   std::ofstream myfile2;
   myfile2.open("sd_" + name + ".txt");
 
@@ -1407,19 +1457,32 @@ List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
     }
     myfile2 << "\n";
   }
-   #else
-  NumericMatrix sd_m(L, L);
+  #else
+  NumericVector sd_v;
+    Rprintf("storing sds\n");  
   for(int m=0; m<L; m++){
     for(int n=0; n<L; n++){
-      sd_m(m, n) = sd_slices(m,n);
+      sd_v.push_back(sd_slices(m,n));
     }
   }
+
+    Rprintf("creating stats\n");  
+  List Lstats = List::create(Named("feature") = feature_v,
+			     Named("order") = order_v,
+			     Named("mean") = mean_v,
+			     Named("sd") = sd_v);
+  DataFrame Lstatsdf(Lstats);
+
+  Rprintf("creating flux\n");  
  List Lflux = List::create(Named("From") = from_v,
 			    Named("To") = to_v,
 			   Named("Probability") = prob_v);
   DataFrame Lfluxdf(Lflux);
   
-  List Lout = List::create(Named("transitions") = Lfluxdf, Named("means") = mean_m, Named("sds") = sd_m);
+  List Lout = List::create(Named("stats") = Lstatsdf,
+			   Named("transitions") = Lfluxdf,
+			   Named("features") = 0,
+			   Named("viz") = Lvizdf);
 
   return Lout;
   #endif

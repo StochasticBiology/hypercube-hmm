@@ -1,5 +1,11 @@
 # various plots for the output of hypercubic inference (or other approaches coerced to hypercubic format)
 
+library(stringr)
+library(ggplot2)
+library(ggrepel)
+library(ggraph)
+library(gridExtra)
+library(igraph)
 library(gtools)
 
 # redundant? old, less flexible bubble plot function
