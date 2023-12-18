@@ -10,7 +10,7 @@ Requirements
 
 The inference code uses the C++ `armadillo` library [7]. Other visualisations use R libraries `stringr` [8], `ggplot2` [9], `ggrepel` [10], `gridExtra` [11], and `igraph` [12].
 
-The R implementation requires RcppArmadillo.
+The R implementation requires `Rcpp` and `RcppArmadillo`.
 
 Contents
 =======
@@ -20,8 +20,9 @@ Examples
 
 _In R:_
 
-Make sure you have the `RcppArmadillo` library installed. Then you can access HyperHMM functionality with
+Make sure you have the `Rcpp` and `RcppArmadillo` libraries installed. Then you can access HyperHMM functionality with
 
+`library(Rcpp)`<br>
 `library(RcppArmadillo)`<br>
 `sourceCpp("hyperhmm-r.cpp")`
 
