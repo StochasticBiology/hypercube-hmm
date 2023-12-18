@@ -24,34 +24,24 @@ g++ hyperhmm.cpp -larmadillo -o hyperhmm.ce
 Then a simple example could be run with
 
 ```
-./hyperhmm.ce Data/simple_case1_L5.txt 5 10 simple1 1 1
+./hyperhmm.ce --obs Data/simple_case1_L5.txt
 ```
-
-The file `run-simple.R` attempts to demonstrate a simple implementation and plotting case using R. Alternatively, if you have run HyperHMM from the command line and just want to produce plots using the output, use `just-plot.R`.
-
 
 Inference
 -------
 
-`hyperhmm.cpp` is the inference code. Compile with, for example,
+The code takes several command-line arguments:
 
-`g++ hyperhmm.cpp -o hyperhmm.ce`
+| Argument | R | Command-line | Default |
+|----------|---|--------------|---------|
+| Input data |  | --obs *filename* | None (required) |
+| Label for output files || --label *labelstring* | *filename*-out |
+| Random number seed (for bootstrapping) |  | --seed *N* | 1 |
+| Number of bootstrap resamples | | --nboot *N* | 100 |
+| Simulate random walkers for each resample? | | --fullsample | (off) |
+| Longitudinal data? | | --longitudinal | (off) |
 
-The code takes several command line arguments:
-
-`./hyperhmm.ce [datafile] [number of features] [number of bootstrap resamples] [output file label] [cross-sectional data (0 or 1)] [simulate random walkers for each sample (0 or 1)]`
-
-- `datafile` -- a datafile containing cross-sectional or longitudinal observations as bit strings (see below)
-- `number of features` -- the number of features/traits/characters in the system (i.e. the length of a bit string in the datafile)
-- `number of bootstrap resamples` -- 0 for a single point estimate; >0 runs the given number of resamples in addition
-- `output file label` -- a string to label output files
-- `cross-sectional data` -- if 1, data are assumed to be independent snapshots and the datafile should have one column. If 0, data are assumed to be observed transitions between two states and the datafile should have two columns (ancestor and descendant state)
-- `simulate random walkers for each sample` -- random walkers are simulated on the point estimate hypercube to summarise the dynamics. If 1, they are simulated on every bootstrapped hypercube too and the summary is over all resamples. This can make the code take much longer for simple systems.
-
-For example,
-`./hyperhmm.ce Data/simple_case1_L5.txt 5 100 simple1 1 1`
-
-The code outputs wide-format datafiles storing the mean and bootstrap standard deviation of the probability of observing a given change at a given time; also the trajectories of random walkers simulated on the inferred network.
+The code outputs datafiles describing the maximum likelihood inferred transition probabilities between states (`transitions_labelstring.txt`), wide-format datafiles storing the mean (`mean_labelstring.txt`) and bootstrap standard deviation (`sd_labelstring.txt`), and a set of transitions from sampled trajectories of random walkers simulated on the inferred network (`graph_viz_labelstring.txt`).
 
 Data
 ------
@@ -84,6 +74,25 @@ The code base includes several R scripts that "wrap" external calls to HyperHMM,
 The analyses and figures in the associated manuscript are reproduced with the various `...-start.R` and `...-retrieve.R` scripts. If you want to run these, pull the `Data/` contents into the working directory first.
 
 Specifically, `double-approach-....R` compares HyperHMM and HyperTraPS, and `other-approaches-....R` compares HyperHMM, HyperTraPS, Oncotrees, MHN, and CBN (TRONCO).
+
+Old command-line formatting
+------
+
+In its first published form, the following was true. This input format is preserved for backwards compatibility but the setup above is recommended for flexibility.
+
+The code takes several command line arguments:
+
+`./hyperhmm.ce [datafile] [number of features] [number of bootstrap resamples] [output file label] [cross-sectional data (0 or 1)] [simulate random walkers for each sample (0 or 1)]`
+
+- `datafile` -- a datafile containing cross-sectional or longitudinal observations as bit strings (see below)
+- `number of features` -- the number of features/traits/characters in the system (i.e. the length of a bit string in the datafile)
+- `number of bootstrap resamples` -- 0 for a single point estimate; >0 runs the given number of resamples in addition
+- `output file label` -- a string to label output files
+- `cross-sectional data` -- if 1, data are assumed to be independent snapshots and the datafile should have one column. If 0, data are assumed to be observed transitions between two states and the datafile should have two columns (ancestor and descendant state)
+- `simulate random walkers for each sample` -- random walkers are simulated on the point estimate hypercube to summarise the dynamics. If 1, they are simulated on every bootstrapped hypercube too and the summary is over all resamples. This can make the code take much longer for simple systems.
+
+For example,
+`./hyperhmm.ce Data/simple_case1_L5.txt 5 100 simple1 1 1`
 
 References
 =====
