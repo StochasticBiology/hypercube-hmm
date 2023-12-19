@@ -1184,8 +1184,13 @@ List run_inference(vector<string>& data, int L, int n_boot, string name, double&
   #endif
 
   cout << "Running bootstrap resamples\n";
+  int outboot;
   for(int i=0; i<n_boot; i++){
-    if(i % (int)(n_boot/10) == 0) {
+    outboot = 0;
+    if(n_boot < 10) outboot = 1;
+    else if(i % (int)(n_boot/10) == 0) outboot = 1;
+    if(outboot == 1)
+    {
       cout << "Bootstrap number: " << i+1 << "\n";
     }
     vector<string> new_data = data;
@@ -1364,8 +1369,13 @@ List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
   }
   #endif
 
+  int outboot;
   for(int i=0; i<n_boot; i++){
-    if(i % (int)(n_boot/10) == 0) {
+     outboot = 0;
+    if(n_boot < 10) outboot = 1;
+    else if(i % (int)(n_boot/10) == 0) outboot = 1;
+    if(outboot == 1)
+    {
       cout << "Bootstrap number: " << i+1 << "\n";
     }
     vector<string> new_data = data;
