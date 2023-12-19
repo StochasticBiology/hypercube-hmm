@@ -37,7 +37,7 @@ m = matrix(c(0,0,1,0,1,1), byrow=TRUE, ncol=3)
 HyperHMM(m)
 ```
 
-Have a look at `hyperhmm-demos.R` for some examples.
+Have a look at `hyperhmm-demos.R` for some simple examples, and `hyperhmm-run.R` for more examples from the paper.
 
 _From the command line:_
 
@@ -87,7 +87,7 @@ For longitudinal data, a matrix with the same number of rows and columns can be 
 `0011`<br>
 `1001`
 
-Have a look at `hyperhmm-demos.R` for some examples.
+Have a look at `hyperhmm-demos.R` for some examples, and `hyperhmm-run.R` for more examples from the paper.
 
 _For the command line:_
 
@@ -127,7 +127,7 @@ From earlier development, the code base includes several R scripts that "wrap" e
 
 The code `hyperhmm-wrap.R` provides a function to call HyperHMM from R; `hypertraps-wrap.R` does the same for HyperTraPS.
 
-The analyses and figures in the associated manuscript are reproduced with the various `...-start.R` and `...-retrieve.R` scripts. If you want to run these, pull the `Data/` contents into the working directory first.
+The analyses and figures in the associated manuscript are reproduced with the various `...-start.R` and `...-retrieve.R` scripts. If you want to run these, pull the `Data/` contents into the working directory first. *As of a 2023 update, the HyperHMM results in the paper are also produced with a single R script `hyperhmm-run.R` in the root directory.*
 
 Specifically, `double-approach-....R` compares HyperHMM and HyperTraPS, and `other-approaches-....R` compares HyperHMM, HyperTraPS, Oncotrees, MHN, and CBN (TRONCO).
 
