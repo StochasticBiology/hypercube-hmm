@@ -394,3 +394,48 @@ plot.standard = function(fitted) {
   # and arrange plots together
   return(ggarrange(plot.bubs, plot.cube, plot.diag, nrow=1))
 }
+
+DecToBin <- function(x, len) {
+  s = c()
+  for(j in (len-1):0)
+  {
+    if(x >= 2**j) { s=c(s,1); x = x-2**j } else { s=c(s,0)}
+  }
+  return(paste(s, collapse=""))
+}
+
+BinToDec <- function(state) {
+  this.ref = 0
+  for(j in 1:length(state)) {
+    this.ref = this.ref + state[j]*(2**(length(state)-j))
+  }
+  return(this.ref)
+}
+
+# adapted HyperTraPS plot for HyperHMM outputs
+plot.hypercube.flux = function(my.post, thresh = 0.05, node.labels = TRUE, use.probability = FALSE) {
+  ### produce hypercube subgraph
+  bigL = my.post$L
+  if(use.probability == TRUE) {
+    trans.p = my.post$transitions[my.post$transitions$Probability > thresh,]
+  } else {
+    trans.p = my.post$transitions[my.post$transitions$Flux > thresh,]
+  }
+  trans.g = graph_from_data_frame(trans.p)
+  bs = unlist(lapply(as.numeric(V(trans.g)$name), DecToBin, len=bigL))
+  V(trans.g)$binname = V(trans.g)$name
+  layers = str_count(bs, "1")
+  if(use.probability == TRUE) {
+    this.plot =  ggraph(trans.g, layout="sugiyama", layers=layers) + 
+      geom_edge_link(aes(edge_width=Probability, edge_alpha=Probability)) +
+      scale_edge_width(limits=c(0,NA)) + scale_edge_alpha(limits=c(0,0.5)) + theme_graph() #+
+  } else {
+  this.plot =  ggraph(trans.g, layout="sugiyama", layers=layers) + 
+    geom_edge_link(aes(edge_width=Flux, edge_alpha=Flux)) +
+    scale_edge_width(limits=c(0,NA)) + scale_edge_alpha(limits=c(0,0.5)) + theme_graph() #+
+   }
+  if(node.labels == TRUE) {
+    this.plot = this.plot + geom_node_text(aes(label=binname),angle=45,size=2) 
+  }
+  return(this.plot)
+}
