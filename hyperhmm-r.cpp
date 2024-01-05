@@ -1167,8 +1167,11 @@ List run_inference(vector<string>& data, int L, int n_boot, string name, double&
     }
   }
   #else
-  NumericVector from_v, to_v, prob_v;
+  NumericVector from_v, to_v, prob_v, flux_v;
   int k = 0, c=0;
+  vector<double> stateprobs(mypow2(L));
+  stateprobs[0] = 1;
+  
   for(int i=0; i<mypow2(L); i++){
     int n_end_vertices = n_partners[i];
     int r = A_row_ptr(i);
@@ -1178,6 +1181,8 @@ List run_inference(vector<string>& data, int L, int n_boot, string name, double&
       from_v.push_back(i);
       to_v.push_back(j2);
       prob_v.push_back(A_val(r+c));
+      flux_v.push_back(stateprobs[i]*A_val(r+c));
+      stateprobs[j2] += stateprobs[i]*A_val(r+c);
       k ++, c++;
     }
   }
@@ -1281,10 +1286,12 @@ List run_inference(vector<string>& data, int L, int n_boot, string name, double&
   Rprintf("creating flux\n");  
  List Lflux = List::create(Named("From") = from_v,
 			    Named("To") = to_v,
-			   Named("Probability") = prob_v);
+			   Named("Probability") = prob_v,
+			   Named("Flux") = flux_v);
   DataFrame Lfluxdf(Lflux);
 
-  List Lout = List::create(Named("stats") = Lstatsdf,
+  List Lout = List::create(Named("L") = L,
+			   Named("stats") = Lstatsdf,
 			   Named("transitions") = Lfluxdf,
 			   Named("features") = 0,
 			   Named("viz") = Lvizcv);
@@ -1461,7 +1468,8 @@ List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, i
 			   Named("Probability") = prob_v);
   DataFrame Lfluxdf(Lflux);
   
-  List Lout = List::create(Named("stats") = Lstatsdf,
+  List Lout = List::create(Named("L") = L,
+			   Named("stats") = Lstatsdf,
 			   Named("transitions") = Lfluxdf,
 			   Named("features") = 0,
 			   Named("viz") = Lvizcv);
