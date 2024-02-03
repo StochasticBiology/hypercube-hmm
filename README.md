@@ -118,7 +118,7 @@ _In R:_
 Output and plotting
 ------
 
-`HyperHMM` returns a named list with the following elements
+*In R*, `HyperHMM` returns a named list with the following elements
 
 | Element | Description |
 |---------|---------|
