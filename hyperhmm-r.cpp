@@ -1026,730 +1026,830 @@ void sd_cube_slices(arma::cube C, arma::mat& sd_C, int n_slices, arma::mat mean)
 
 #ifndef _USE_CODE_FOR_R
 void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma::vec A_row_ptr, arma::vec A_col_idx, int n_traits){
-  #else
-CharacterVector graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma::vec A_row_ptr, arma::vec A_col_idx, int n_traits){
-  #endif
-
-  vector<int> n_partners;
-  vector<int> c_partners;
-  vector<int> partners;
-
-  possible_transitions(n_partners, c_partners, partners, n_traits);
-
-  #ifndef _USE_CODE_FOR_R
-  std::ofstream myfile;
-  myfile.open(file_name);
-  #else
-  CharacterVector trans_v(n_walkers*n_traits); //froms_v(n_walkers*n_traits), tos_v(n_walkers*n_traits);
-  #endif
-  //Loop through the number of random walkers
-  for(int i=0; i<n_walkers; i++){
-    int t = 0;
-    int state = 0;
-    //Move from the first state (0) and stop once we have gained all the traits
-    while(t < n_traits){
-      double random_choice = random_zero_to_one();
-      int choice = 0;
-      int start_idx = c_partners[state];
-      double prob = A_val(row_col_to_idx(state, partners[start_idx], A_row_ptr, A_col_idx));
-      //Loop until we reach the random choice
-      while(random_choice > prob){
-	choice += 1;
-	prob += A_val(row_col_to_idx(state, partners[start_idx+choice], A_row_ptr, A_col_idx));
-      }
-      int choice2 = partners[start_idx+choice];
-      #ifndef _USE_CODE_FOR_R
-      myfile << number2binary(state, n_traits) << " " << number2binary(choice2, n_traits) << endl;
-      #else
-      /*      if(t < n_traits) {
-       froms_v[i*n_traits + t] = number2binary(state, n_traits);
-       tos_v[i*n_traits + t] = number2binary(choice2, n_traits);
-       }*/
-      trans_v[i*n_traits + t] = number2binary(state, n_traits)+" "+number2binary(choice2, n_traits);
-      #endif
-      t += 1;
-      state = partners[start_idx+choice];
-    }
-
-  }
-  #ifndef _USE_CODE_FOR_R
-  #else
-  /* List Lviz = List::create(Named("froms") = froms_v,
-     Named("tos") = tos_v);*/
-  // DataFrame Lvizdf(Lviz);
-  //List Lviz = List::create(Named("tran
- return(trans_v);
-
- #endif
-}
-
-
-/*
-  A function for doing the bootstrap
-  Input variables:
-  - string file_name: The full name of the .txt file
-  - int n_boot: The total number of bootstraps you want to perform
-  - int L: The numberof traits
-  - arma::cube mean: ???
-  - arma::mat sd: ???
-  - string name: The name you want the output file to have
-  Output:
-  Two files containing the mean of the random walkers and the standard deviation
-*/
-#ifndef _USE_CODE_FOR_R
-void run_inference(vector<string>& data, int L, int n_boot, string name, double& time, int rw_boot) {
-  #else
-List run_inference(vector<string>& data, int L, int n_boot, string name, double& time, int rw_boot) {
-  #endif
-    
-  vector<string> data_bw;
-    
-  double time_itr = 0.;
-
-  arma::cube mean(L,L,n_boot+1,arma::fill::zeros);
-  arma::cube sd(L,L,n_boot+1,arma::fill::zeros);
-
-
-  vector<string> data_unique;
-  vector<int> data_count;
-
-  unique_and_count(data, data_unique, data_count);
-  add_questionmarks(data_unique, L, data_bw);
-
-
-  arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
-  arma::vec A_row_ptr(pow(2,L)+1, arma::fill::zeros);
-  arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
-  uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
-
-  int itr = 0;
-  auto t1 = std::chrono::high_resolution_clock::now();
-  adapted_baum_welch(A_val, A_row_ptr, A_col_idx, data_bw, data_count, 1000, itr, pow(10, -3), L, false, false);
-  auto t2 = std::chrono::high_resolution_clock::now();
-  double duration_seconds = std::chrono::duration<double>(t2 - t1).count(); //Measure time
-  time_itr += duration_seconds/itr;
-  time += duration_seconds;
-
-  #ifndef _USE_CODE_FOR_R
-  graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
-  #else
-  CharacterVector Lvizcv = graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
-  #endif
-  
-  arma::mat rw(L,L, arma::fill::zeros);
-  random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
-
-  cout << "Mean ordering matrix from sampling:\n";
-  cout << rw << endl;
-  mean.slice(0) = rw;
-  sd.slice(0) = rw;
-
-  //Write the maximum likelihood values to file
-
-  vector<int> n_partners;
-  vector<int> c_partners;
-  vector<int> partners;
-  possible_transitions(n_partners, c_partners, partners, L);
-
-  #ifndef _USE_CODE_FOR_R
-  std::ofstream myfile3;
-  myfile3.open("transitions_" + name + ".txt");
-  myfile3 << "From " << "To " << "Probability" << endl;
-  int k = 0, c=0;
-  for(int i=0; i<mypow2(L); i++){
-    int n_end_vertices = n_partners[i];
-    int r = A_row_ptr(i);
-    c = 0;
-    for(int j=0; j<n_end_vertices; j++){
-      int j2 = partners[k];
-      myfile3 << i << " "<< j2 <<" "<< A_val(r+c) << endl;
-      k ++, c++;
-    }
-  }
-  #else
-  NumericVector from_v, to_v, prob_v, flux_v;
-  int k = 0, c=0;
-  vector<double> stateprobs(mypow2(L));
-  stateprobs[0] = 1;
-  
-  for(int i=0; i<mypow2(L); i++){
-    int n_end_vertices = n_partners[i];
-    int r = A_row_ptr(i);
-    c = 0;
-    for(int j=0; j<n_end_vertices; j++){
-      int j2 = partners[k];
-      from_v.push_back(i);
-      to_v.push_back(j2);
-      prob_v.push_back(A_val(r+c));
-      flux_v.push_back(stateprobs[i]*A_val(r+c));
-      stateprobs[j2] += stateprobs[i]*A_val(r+c);
-      k ++, c++;
-    }
-  }
-  #endif
-
-  cout << "Running bootstrap resamples\n";
-  int outboot;
-  for(int i=0; i<n_boot; i++){
-    outboot = 0;
-    if(n_boot < 10) outboot = 1;
-    else if(i % (int)(n_boot/10) == 0) outboot = 1;
-    if(outboot == 1)
-    {
-      cout << "Bootstrap number: " << i+1 << "\n";
-    }
-    vector<string> new_data = data;
-    bootstrap(data, new_data);
-    unique_and_count(new_data, data_unique, data_count);
-    add_questionmarks(data_unique, L, new_data);
-
-
-    arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
-    arma::vec A_row_ptr(pow(2,L)+1, arma::fill::zeros);
-    arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
-    uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
-
-    itr = 0;
-    auto t3 = std::chrono::high_resolution_clock::now();
-    adapted_baum_welch(A_val, A_row_ptr, A_col_idx, new_data, data_count, 1000, itr, pow(10, -3), L, false, false);
-    auto t4 = std::chrono::high_resolution_clock::now();
-    double duration_seconds2 = std::chrono::duration<double>(t4 - t3).count(); //Measure time
-    time_itr += duration_seconds2/itr;
-    time += duration_seconds2;
-    if(rw_boot == 1){
-      arma::mat rw(L,L, arma::fill::zeros);
-      random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
-      mean.slice(i+1) = rw;
-      sd.slice(i+1) = rw;
-    }
-  }
-
-  //cout << "Average rutime per iteration with " << n_boot << " bootstrap(s): " << time_itr/(n_boot+1) << endl;
-
-  arma::mat mean_slices(L,L, arma::fill::zeros);
-  mean_cube_slices(mean, mean_slices, n_boot+1);
-
-  arma::mat sd_slices(L,L, arma::fill::zeros);
-  sd_cube_slices(sd, sd_slices, n_boot+1, mean_slices);
-
-
-    #ifndef _USE_CODE_FOR_R
-  std::ofstream myfile;
-  myfile.open("mean_" + name + ".txt");
-
-  for(int m=0; m<L; m++){
-    for(int n=0; n<L; n++){
-      myfile << scientific << mean_slices(m,n) << " ";
-    }
-    myfile << "\n";
-  }
-  #else
-  NumericVector mean_v;
-  NumericVector feature_v;
-  NumericVector order_v;
-  Rprintf("storing means\n");  
-  for(int m=0; m<L; m++){
-    for(int n=0; n<L; n++){
-      feature_v.push_back(L-m);
-      order_v.push_back(n+1);
-      mean_v.push_back(mean_slices(m,n));
-    }
-  }
-  #endif
-
-    #ifndef _USE_CODE_FOR_R
-  std::ofstream myfile2;
-  myfile2.open("sd_" + name + ".txt");
-
-  for(int m=0; m<L; m++){
-    for(int n=0; n<L; n++){
-      myfile2 << scientific << sd_slices(m,n) << " ";
-    }
-    myfile2 << "\n";
-  }
-  #else
-  NumericVector sd_v;
-    Rprintf("storing sds\n");  
-  for(int m=0; m<L; m++){
-    for(int n=0; n<L; n++){
-      sd_v.push_back(sd_slices(m,n));
-    }
-  }
-
-    Rprintf("creating stats\n");  
-  List Lstats = List::create(Named("feature") = feature_v,
-			     Named("order") = order_v,
-			     Named("mean") = mean_v,
-			     Named("sd") = sd_v);
-  DataFrame Lstatsdf(Lstats);
-
-  Rprintf("creating flux\n");  
- List Lflux = List::create(Named("From") = from_v,
-			    Named("To") = to_v,
-			   Named("Probability") = prob_v,
-			   Named("Flux") = flux_v);
-  DataFrame Lfluxdf(Lflux);
-
-  List Lout = List::create(Named("L") = L,
-			   Named("stats") = Lstatsdf,
-			   Named("transitions") = Lfluxdf,
-			   Named("features") = 0,
-			   Named("viz") = Lvizcv);
-
-  return Lout;
-  #endif
-
-}
-
-
-
-
-#ifndef _USE_CODE_FOR_R
-void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, int L, int n_boot, string name, double& time, int rw_boot){
 #else
-List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, int L, int n_boot, string name, double& time, int rw_boot){
+  CharacterVector graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma::vec A_row_ptr, arma::vec A_col_idx, int n_traits){
 #endif
-  
-  int itr = 0;
-			     
-  arma::cube mean(L,L,n_boot+1,arma::fill::zeros);
-  arma::cube sd(L,L,n_boot+1,arma::fill::zeros);
 
-  arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
-  arma::vec A_row_ptr(pow(2,L)+1, arma::fill::zeros);
-  arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
-  uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
-  auto t1 = std::chrono::high_resolution_clock::now();
-  adapted_baum_welch(A_val, A_row_ptr, A_col_idx, data, data_count, 1000, itr, pow(10, -3), L, false, false);
-  auto t2 = std::chrono::high_resolution_clock::now();
-  double duration_seconds = std::chrono::duration<double>(t2 - t1).count(); //Measure time
-  time += duration_seconds;
-  arma::mat rw(L,L, arma::fill::zeros);
-  random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
+    vector<int> n_partners;
+    vector<int> c_partners;
+    vector<int> partners;
 
-  #ifndef _USE_CODE_FOR_R
-  graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
-  #else
-  CharacterVector Lvizcv = graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
+    possible_transitions(n_partners, c_partners, partners, n_traits);
+
+#ifndef _USE_CODE_FOR_R
+    std::ofstream myfile;
+    myfile.open(file_name);
+#else
+    CharacterVector trans_v(n_walkers*n_traits); //froms_v(n_walkers*n_traits), tos_v(n_walkers*n_traits);
 #endif
-  
-  cout << "Mean ordering matrix from sampling:\n";
-  cout << rw << endl;
-  mean.slice(0) = rw;;
-  sd.slice(0) = rw;
-
-  //Write the maximum likelihood values to file
-  vector<int> n_partners;
-  vector<int> c_partners;
-  vector<int> partners;
-  possible_transitions(n_partners, c_partners, partners, L);
-
-  #ifndef _USE_CODE_FOR_R
-  std::ofstream myfile3;
-  myfile3.open("transitions_" + name + ".txt");
-  myfile3 << "From " << "To " << "Probability" << endl;
-  int k = 0, c=0;
-  for(int i=0; i<mypow2(L); i++){
-    int n_end_vertices = n_partners[i];
-    int r = A_row_ptr(i);
-    c = 0;
-    for(int j=0; j<n_end_vertices; j++){
-      int j2 = partners[k];
-      myfile3 << i << " "<< j2 <<" "<< A_val(r+c) << endl;
-      k ++, c++;
-    }
-  }
-  #else
-  NumericVector from_v, to_v, prob_v;
-  int k = 0, c=0;
-  for(int i=0; i<mypow2(L); i++){
-    int n_end_vertices = n_partners[i];
-    int r = A_row_ptr(i);
-    c = 0;
-    for(int j=0; j<n_end_vertices; j++){
-      int j2 = partners[k];
-      from_v.push_back(i);
-      to_v.push_back(j2);
-      prob_v.push_back(A_val(r+c));
-      k ++, c++;
-    }
-  }
-  #endif
-
-  int outboot;
-  for(int i=0; i<n_boot; i++){
-     outboot = 0;
-    if(n_boot < 10) outboot = 1;
-    else if(i % (int)(n_boot/10) == 0) outboot = 1;
-    if(outboot == 1)
-    {
-      cout << "Bootstrap number: " << i+1 << "\n";
-    }
-    vector<string> new_data = data;
-    bootstrap2(data, new_data, L);
-
-    arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
-    arma::vec A_row_ptr(pow(2,L)+1, arma::fill::zeros);
-    arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
-    uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
-    auto t3 = std::chrono::high_resolution_clock::now();
-    adapted_baum_welch(A_val, A_row_ptr, A_col_idx, new_data, data_count, 1000,itr, pow(10, -3), L, false, false);
-    auto t4 = std::chrono::high_resolution_clock::now();
-    double duration_seconds2 = std::chrono::duration<double>(t4 - t3).count(); //Measure time
-    time += duration_seconds2;
-    if(rw_boot == 1){
-      arma::mat rw(L,L, arma::fill::zeros);
-      random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
-      mean.slice(i+1) = rw;
-      sd.slice(i+1) = rw;
-    }
-
-  }
-  arma::mat mean_slices(L,L, arma::fill::zeros);
-  mean_cube_slices(mean, mean_slices, n_boot+1);
-
-  arma::mat sd_slices(L,L, arma::fill::zeros);
-  sd_cube_slices(sd, sd_slices, n_boot+1, mean_slices);
-
-
-  #ifndef _USE_CODE_FOR_R
-  std::ofstream myfile;
-  myfile.open("mean_" + name + ".txt");
-
-  for(int m=0; m<L; m++){
-    for(int n=0; n<L; n++){
-      myfile << scientific << mean_slices(m,n) << " ";
-    }
-    myfile << "\n";
-  }
- #else
-  NumericVector mean_v;
-  NumericVector feature_v;
-  NumericVector order_v;
-  Rprintf("storing means\n");  
-  for(int m=0; m<L; m++){
-    for(int n=0; n<L; n++){
-      feature_v.push_back(L-m);
-      order_v.push_back(n+1);
-      mean_v.push_back(mean_slices(m,n));
-    }
-  }
-  #endif
-
-    #ifndef _USE_CODE_FOR_R
-  std::ofstream myfile2;
-  myfile2.open("sd_" + name + ".txt");
-
-  for(int m=0; m<L; m++){
-    for(int n=0; n<L; n++){
-      myfile2 << scientific << sd_slices(m,n) << " ";
-    }
-    myfile2 << "\n";
-  }
-  #else
-  NumericVector sd_v;
-    Rprintf("storing sds\n");  
-  for(int m=0; m<L; m++){
-    for(int n=0; n<L; n++){
-      sd_v.push_back(sd_slices(m,n));
-    }
-  }
-
-    Rprintf("creating stats\n");  
-  List Lstats = List::create(Named("feature") = feature_v,
-			     Named("order") = order_v,
-			     Named("mean") = mean_v,
-			     Named("sd") = sd_v);
-  DataFrame Lstatsdf(Lstats);
-
-  Rprintf("creating flux\n");  
- List Lflux = List::create(Named("From") = from_v,
-			    Named("To") = to_v,
-			   Named("Probability") = prob_v);
-  DataFrame Lfluxdf(Lflux);
-  
-  List Lout = List::create(Named("L") = L,
-			   Named("stats") = Lstatsdf,
-			   Named("transitions") = Lfluxdf,
-			   Named("features") = 0,
-			   Named("viz") = Lvizcv);
-
-  return Lout;
-  #endif
-}
-
-
-
-/*
-  A function for finding the sum of the elements in a vector of doubles.
-  Input variables:
-  - vector<double> vec: The vector to take the sum of
-  Output:
-  The sum of the vector
-*/
-double sum_vector(vector<double> vec){
-  double s = 0.;
-  for(int i=0; i<vec.size(); i++){
-    s += vec[i];
-  }
-  return s;
-}
-
-void help(void)
-{
-  printf("Options [defaults]:\n\n--obs file.txt\t\tobservations file [NA]\n--label labelstring\tString to label file output [[filename]-out]\n--seed N\t\tRandom number seed [1]\n--nboot N\t\tNumber of bootstrap resamples [100]\n--fullsample\t\tSimulate walkers for each resample [0]\n--longitudinal\t\tLongitudinal data [OFF]\n--help\t\t\tDisplay this message\n\n");
-}
-
-/*
-  The command line arguments needs to be as follow:
-  data_file_name.txt L number_bootstraps name_output_file cross_sectional rw_bootstrap
-
-  If you just want the maximum likelihood results set number_bootstrap = 0.
-  If you have cross_sectional data set cross_sectional = 1, if longitudinal data set cross_sectional = 0.
-  If you want to add summary data for each bootstrap set rw_bootstrap = 1, else set rw_bootstrap = 0.
-*/
-int main(int argc, char** argv){
-
-  int L, n_boot, rw_boot;
-  char obsfile[1000];
-  char labelstr[1000];
-  int cross_sectional;
-  int filelabel;
-  int fullsample;
-  int seed;
-  double time;
-  int i;
-  int oldform = 0;
-  vector<string> data;
-  vector<int> data_count;
-  
-  n_boot = 100;
-  fullsample = 0;
-  strcpy(obsfile, "");
-  strcpy(labelstr, "");
-  seed = 1;
-  filelabel = 0;
-  cross_sectional = 1;
-
-  printf("== HyperHMM ==\n\nPlease cite Moen, M.T. and Johnston, I.G., 2023. HyperHMM: efficient inference of evolutionary and progressive dynamics on hypercubic transition graphs. Bioinformatics, 39(1), p.btac803.\n\n");
-
-  if(argc == 7)
-    {
-      if(!(atoi(argv[5]) != 0 && atoi(argv[5]) != 1) || atoi(argv[2]) <= 0 || atoi(argv[3]) < 0 || (atoi(argv[6]) != 0 && atoi(argv[6]) != 1)) {
-	oldform = 1;
+    //Loop through the number of random walkers
+    for(int i=0; i<n_walkers; i++){
+      int t = 0;
+      int state = 0;
+      //Move from the first state (0) and stop once we have gained all the traits
+      while(t < n_traits){
+	double random_choice = random_zero_to_one();
+	int choice = 0;
+	int start_idx = c_partners[state];
+	double prob = A_val(row_col_to_idx(state, partners[start_idx], A_row_ptr, A_col_idx));
+	//Loop until we reach the random choice
+	while(random_choice > prob){
+	  choice += 1;
+	  prob += A_val(row_col_to_idx(state, partners[start_idx+choice], A_row_ptr, A_col_idx));
+	}
+	int choice2 = partners[start_idx+choice];
+#ifndef _USE_CODE_FOR_R
+	myfile << number2binary(state, n_traits) << " " << number2binary(choice2, n_traits) << endl;
+#else
+	/*      if(t < n_traits) {
+		froms_v[i*n_traits + t] = number2binary(state, n_traits);
+		tos_v[i*n_traits + t] = number2binary(choice2, n_traits);
+		}*/
+	trans_v[i*n_traits + t] = number2binary(state, n_traits)+" "+number2binary(choice2, n_traits);
+#endif
+	t += 1;
+	state = partners[start_idx+choice];
       }
-    }
 
-  if(oldform == 1)
-    {
-      //    cout << "Usage:\n\t./hyperhmm.ce [datafile] [number of features] [number of bootstrap resamples] [output file label] [cross-sectional data (0 or 1)] [simulate random walkers for each sample (0 or 1)]\n";
-      // 1 = datafile, 2 = L, 3 = nboot, 4 = output label, 5 = cross-sectional, 6 = walkers for each resample
-      printf("It looks like you've used the old command-line argument specification, which is preserved for backwards compatibility. The newer format may allow more flexibility:\n");
-      help();
-      n_boot = atoi(argv[3]);
-      rw_boot = atoi(argv[6]);
-      cross_sectional = atoi(argv[5]);
-      sprintf(obsfile, "%s", argv[1]);
-      sprintf(labelstr, "%s", argv[4]);  
     }
-  else
-    {
-      // deal with command-line arguments
-	
-      for(i = 1; i < argc; i+=2)
-	{
-	  if(strcmp(argv[i], "--obs\0") == 0) strcpy(obsfile, argv[i+1]);
-	  else if(strcmp(argv[i], "--label\0") == 0) { filelabel = 1; strcpy(labelstr, argv[i+1]); }
-	  else if(strcmp(argv[i], "--seed\0") == 0) seed = atoi(argv[i+1]);
-	  else if(strcmp(argv[i], "--nboot\0") == 0) n_boot = atoi(argv[i+1]);
-	  else if(strcmp(argv[i], "--fullsample\0") == 0) { rw_boot = 1; i--; }
-	  else if(strcmp(argv[i], "--longitudinal\0") == 0) { cross_sectional = 0; i--; }
-	  else if(strcmp(argv[i], "--help\0") == 0) { help(); return 0; }
-	  else { printf("Didn't understand argument %s\n", argv[i]); i--; }
-	}
-      if(filelabel == 0)
-	{
-	  sprintf(labelstr, "%s-out", obsfile);
-	}
-    }
+#ifndef _USE_CODE_FOR_R
+#else
+    /* List Lviz = List::create(Named("froms") = froms_v,
+       Named("tos") = tos_v);*/
+    // DataFrame Lvizdf(Lviz);
+    //List Lviz = List::create(Named("tran
+    return(trans_v);
 
-  rng.seed(seed);
-  
-  if(strcmp(obsfile, "") == 0)
-    {
-      printf("I need at least an input file!\n\n");
-      help();
-      myexit(0);
-    }
-  
-  // printf("%f %f %f %f\n", random_zero_to_one(), random_zero_to_one(), random_zero_to_one(), random_zero_to_one());
-
-  printf("Attempting to run HyperHMM with the following parameters:\n");
-  printf("  obs: %s\n", obsfile);
-  printf("  cross-sectional: %i\n", cross_sectional);
-  printf("  label: %s\n", labelstr);
-  printf("  seed: %i\n", seed);
-  printf("  nboot: %i\n", n_boot);
-  printf("  fullsample: %i\n\n", rw_boot);
-        
-  if(cross_sectional == 1){
-    import_data(obsfile, data, &L);
-    cout << "From " << obsfile << " I read " << data.size() << " entries and am assuming " << L << " features\n\n";
-    run_inference(data, L, n_boot, labelstr, time, rw_boot);
-  }
-  else if(cross_sectional == 0){
-    import_data_longitudinal(obsfile, data, data_count, &L);
-    cout << "From " << obsfile << " I read " << data.size() << " entries and am assuming " << L << " features\n\n";
-    run_inference_longitudinal(data, data_count, L, n_boot, labelstr, time, rw_boot);
+#endif
   }
 
 
-  //cout << "The time it took to run the algorithm with " << n_boot << " bootstrap(s): " << time/(n_boot+1) << endl;
-  //cout << "Average rutime per iteration with " << n_boot << " bootstrap(s): " << time/(n_boot+1) << endl;
-  return 0;
-}
+  /*
+    A function for doing the bootstrap
+    Input variables:
+    - string file_name: The full name of the .txt file
+    - int n_boot: The total number of bootstraps you want to perform
+    - int L: The numberof traits
+    - arma::cube mean: ???
+    - arma::mat sd: ???
+    - string name: The name you want the output file to have
+    Output:
+    Two files containing the mean of the random walkers and the standard deviation
+  */
+#ifndef _USE_CODE_FOR_R
+  void run_inference(vector<string>& data, int L, int n_boot, string name, double& time, int rw_boot) {
+#else
+    List run_inference(vector<string>& data, int L, int n_boot, string name, double& time, int rw_boot) {
+#endif
+    
+      vector<string> data_bw;
+    
+      double time_itr = 0.;
 
-List HyperHMM(NumericMatrix obs,
-	      Nullable<NumericMatrix> initialstates,
-	      NumericVector seed,
-	      NumericVector nboot,
-	      NumericVector fullsample,
-	      NumericVector outputinput);
+      arma::cube mean(L,L,n_boot+1,arma::fill::zeros);
+      arma::cube sd(L,L,n_boot+1,arma::fill::zeros);
 
-// [[Rcpp::export]]
-List HyperHMM(NumericMatrix obs,
-	      Nullable<NumericMatrix> initialstates = R_NilValue,
-	      NumericVector seed = 1,
-	      NumericVector nboot = 100,
-	      NumericVector fullsample = 1,
-	      NumericVector outputinput = 0)
-{
-  int _longitudinal;
-  int _fullsample = fullsample[0];
-  int _nboot = nboot[0];
-  int _seed = seed[0];
-  int _outputinput = outputinput[0];
-  double time;
-  List infout;
-  int L, ntarg;
 
-  Rprintf("== HyperHMM ==\n\nPlease cite Moen, M.T. and Johnston, I.G., 2023. HyperHMM: efficient inference of evolutionary and progressive dynamics on hypercubic transition graphs. Bioinformatics, 39(1), p.btac803.\n\n");
-
-    if(initialstates.isUsable())
-      _longitudinal = 1;
-    else
-      _longitudinal = 0;
-
-  Rprintf("Attempting to run HyperHMM with the following parameters:\n");
-  Rprintf("  cross-sectional: %i\n", 1-_longitudinal);
-  Rprintf("  seed: %i\n", _seed);
-  Rprintf("  nboot: %i\n", _nboot);
-  Rprintf("  fullsample: %i\n\n", _fullsample);
-
-  rng.seed(_seed);
-  L = obs.ncol(); ntarg = obs.nrow();
-  Rprintf("Found %i entries with %i features.\n", ntarg, L);
-  if(_outputinput)
-    Rprintf("Observations read:\n");
-  if(initialstates.isUsable())
-    {
-      NumericMatrix _initialstates(initialstates);
-      if(_initialstates.ncol() != L || _initialstates.nrow() != ntarg)
-	{
-	  Rprintf("If specifying initial states, we need one initial state for each observation.");
-	  myexit(0);
-	}
-	
-      vector<string> data;
+      vector<string> data_unique;
       vector<int> data_count;
 
-      char tmps[1000];
+      // curate the dataset
+      unique_and_count(data, data_unique, data_count);
+      add_questionmarks(data_unique, L, data_bw);
+
+      arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
+      arma::vec A_row_ptr(pow(2,L)+1, arma::fill::zeros);
+      arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
   
-      for(int i = 0; i < obs.nrow(); i++)
-	{
-	  int c;
-	  string start = "0";
-	  string end = "1";
-	  string word;
-	  string str;
+      // start with uniform initial guess
+      uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
+      int itr = 0;
+  
+      // *** do, and time, the inference process
+      auto t1 = std::chrono::high_resolution_clock::now();
+      adapted_baum_welch(A_val, A_row_ptr, A_col_idx, data_bw, data_count, 1000, itr, pow(10, -3), L, false, false);
+      auto t2 = std::chrono::high_resolution_clock::now();
+      double duration_seconds = std::chrono::duration<double>(t2 - t1).count(); //Measure time
+      time_itr += duration_seconds/itr;
+      time += duration_seconds;
 
-	  for(int j = 0; j < L; j++)
-	    {
-	      sprintf(tmps, "%i", (int)_initialstates(i,j));
-	      str += tmps[0];
-	    }
-	  str += ' ';
-	  for(int j = 0; j < L; j++)
-	    {
-	      sprintf(tmps, "%i", (int)obs(i,j));
-	      str += tmps[0];
-	    }
+#ifndef _USE_CODE_FOR_R
+      graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
+#else
+      CharacterVector Lvizcv = graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
+#endif
+  
+      arma::mat rw(L,L, arma::fill::zeros);
+      random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
 
-  	  if(_outputinput)
-	    cout << str << "\n";
+      cout << "Mean ordering matrix from sampling:\n";
+      cout << rw << endl;
+      mean.slice(0) = rw;
+      sd.slice(0) = rw;
 
-	  int k = 0;
-	  if(str.size()>0){
-	    stringstream ss(str);
-	    string token;
-	    while(ss >> token){
-	      if(k==0){
-		c = count_nr_1(token);
-		if(c > 0){
-		  data.push_back(start);
-		}
-		if(c != 1){
-		  for(int j1=0; j1<c-1; j1++){
-		    data.push_back("?");
-		  }
-		}
-		data.push_back(token);
-		k++;
-	      }
-	      else if(k == 1){
-		int c2 = count_nr_1(token);
-		for(int j2=0; j2<c2-c-1; j2++){
-		  data.push_back("?");
-		}
-		data.push_back(token);
-		if(c2 < token.size()){
-		  for(int j3=c2; j3<L-1; j3++){
-		    data.push_back("?");
-		  }
-		  data.push_back(end);
-		}
-		k = 0;
-	      }
-	    }
-	    data_count.push_back(1);
+      //Write the maximum likelihood values to file
+
+      vector<int> n_partners;
+      vector<int> c_partners;
+      vector<int> partners;
+      possible_transitions(n_partners, c_partners, partners, L);
+
+#ifndef _USE_CODE_FOR_R
+      std::ofstream myfile3;
+      myfile3.open("transitions_" + name + ".txt");
+      myfile3 << "From " << "To " << "Probability" << endl;
+      int k = 0, c=0;
+      for(int i=0; i<mypow2(L); i++){
+	int n_end_vertices = n_partners[i];
+	int r = A_row_ptr(i);
+	c = 0;
+	for(int j=0; j<n_end_vertices; j++){
+	  int j2 = partners[k];
+	  myfile3 << i << " "<< j2 <<" "<< A_val(r+c) << endl;
+	  k ++, c++;
+	}
+      }
+#else
+
+      // lazily get number of edges we'll need to store -- could use maths result
+      int cube_size = 0;
+      for(int i=0; i<mypow2(L); i++){
+	cube_size += n_partners[i];
+      }
+	 
+      // vectors for returning edge weight stats
+      NumericVector from_v(cube_size*(n_boot+1)), to_v(cube_size*(n_boot+1)), prob_v(cube_size*(n_boot+1)), flux_v(cube_size*(n_boot+1)), boot_v(cube_size*(n_boot+1));
+
+      // store edge weight stats for the original data
+      int k = 0, c=0;
+      vector<double> stateprobs(mypow2(L));
+      stateprobs[0] = 1;
+
+      int cube_ref = 0;
+      for(int i=0; i<mypow2(L); i++){
+	int n_end_vertices = n_partners[i];
+	int r = A_row_ptr(i);
+	c = 0;
+	for(int j=0; j<n_end_vertices; j++){
+	  int j2 = partners[k];
+	  from_v[0*cube_size + cube_ref] = i;
+	  to_v[0*cube_size + cube_ref] = j2;
+	  prob_v[0*cube_size + cube_ref] = A_val(r+c);
+	  flux_v[0*cube_size + cube_ref] = stateprobs[i]*A_val(r+c);
+	  boot_v[0*cube_size + cube_ref] = 0;
+	  stateprobs[j2] += stateprobs[i]*A_val(r+c);
+	  k ++, c++;
+	  cube_ref++;
+	}
+      }
+#endif
+
+      cout << "Running bootstrap resamples\n";
+      int outboot;
+      for(int bootref=0; bootref<n_boot; bootref++){
+	outboot = 0;
+	if(n_boot < 10) outboot = 1;
+	else if(bootref % (int)(n_boot/10) == 0) outboot = 1;
+	if(outboot == 1)
+	  {
+	    cout << "Bootstrap number: " << bootref+1 << "\n";
+	  }
+
+	// create resampled dataset
+	vector<string> new_data = data;
+	bootstrap(data, new_data);
+
+	// curate the dataset
+	unique_and_count(new_data, data_unique, data_count);
+	add_questionmarks(data_unique, L, new_data);
+
+	arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
+	arma::vec A_row_ptr(pow(2,L)+1, arma::fill::zeros);
+	arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
+
+	// start with uniform initial guess
+	uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
+
+	itr = 0;
+    
+        // *** do, and time, the inference process
+	auto t3 = std::chrono::high_resolution_clock::now();
+	adapted_baum_welch(A_val, A_row_ptr, A_col_idx, new_data, data_count, 1000, itr, pow(10, -3), L, false, false);
+	auto t4 = std::chrono::high_resolution_clock::now();
+	double duration_seconds2 = std::chrono::duration<double>(t4 - t3).count(); //Measure time
+	time_itr += duration_seconds2/itr;
+	time += duration_seconds2;
+
+        // store edge weight stats for this resample
+	std::fill(stateprobs.begin(), stateprobs.end(), 0);
+	stateprobs[0] = 1;
+	k = c = 0;
+	cube_ref = 0;
+	for(int i=0; i<mypow2(L); i++){
+	  int n_end_vertices = n_partners[i];
+	  int r = A_row_ptr(i);
+	  c = 0;
+	  for(int j=0; j<n_end_vertices; j++){
+	    int j2 = partners[k];
+	    from_v[bootref*cube_size + cube_ref] = i;
+	    to_v[bootref*cube_size + cube_ref] = j2;
+	    prob_v[bootref*cube_size + cube_ref] = A_val(r+c);
+	    flux_v[bootref*cube_size + cube_ref] = stateprobs[i]*A_val(r+c);
+	    boot_v[bootref*cube_size + cube_ref] = bootref+1;
+	    stateprobs[j2] += stateprobs[i]*A_val(r+c);
+	    cube_ref++;
+	    k ++, c++;
 	  }
 	}
-            
-      infout = run_inference_longitudinal(data, data_count, L, _nboot, "", time, _fullsample);
+      
+	if(rw_boot == 1){
+	  arma::mat rw(L,L, arma::fill::zeros);
+	  random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
+	  mean.slice(bootref+1) = rw;
+	  sd.slice(bootref+1) = rw;
+	}
+      }
+
+      //cout << "Average rutime per iteration with " << n_boot << " bootstrap(s): " << time_itr/(n_boot+1) << endl;
+
+      arma::mat mean_slices(L,L, arma::fill::zeros);
+      mean_cube_slices(mean, mean_slices, n_boot+1);
+
+      arma::mat sd_slices(L,L, arma::fill::zeros);
+      sd_cube_slices(sd, sd_slices, n_boot+1, mean_slices);
+
+
+#ifndef _USE_CODE_FOR_R
+      std::ofstream myfile;
+      myfile.open("mean_" + name + ".txt");
+
+      for(int m=0; m<L; m++){
+	for(int n=0; n<L; n++){
+	  myfile << scientific << mean_slices(m,n) << " ";
+	}
+	myfile << "\n";
+      }
+#else
+      NumericVector mean_v;
+      NumericVector feature_v;
+      NumericVector order_v;
+      Rprintf("storing means\n");  
+      for(int m=0; m<L; m++){
+	for(int n=0; n<L; n++){
+	  feature_v.push_back(L-m);
+	  order_v.push_back(n+1);
+	  mean_v.push_back(mean_slices(m,n));
+	}
+      }
+#endif
+
+#ifndef _USE_CODE_FOR_R
+      std::ofstream myfile2;
+      myfile2.open("sd_" + name + ".txt");
+
+      for(int m=0; m<L; m++){
+	for(int n=0; n<L; n++){
+	  myfile2 << scientific << sd_slices(m,n) << " ";
+	}
+	myfile2 << "\n";
+      }
+#else
+      NumericVector sd_v;
+      Rprintf("storing sds\n");  
+      for(int m=0; m<L; m++){
+	for(int n=0; n<L; n++){
+	  sd_v.push_back(sd_slices(m,n));
+	}
+      }
+
+      Rprintf("creating stats\n");  
+      List Lstats = List::create(Named("feature") = feature_v,
+				 Named("order") = order_v,
+				 Named("mean") = mean_v,
+				 Named("sd") = sd_v);
+      DataFrame Lstatsdf(Lstats);
+
+      Rprintf("creating flux\n");  
+      List Lflux = List::create(Named("Bootstrap") = boot_v,
+				Named("From") = from_v,
+				Named("To") = to_v,
+				Named("Probability") = prob_v,
+				Named("Flux") = flux_v);
+      DataFrame Lfluxdf(Lflux);
+
+      List Lout = List::create(Named("stats") = Lstatsdf,
+			       Named("transitions") = Lfluxdf,
+			       Named("features") = 0,
+			       Named("viz") = Lvizcv,
+			       Named("L") = L);
+
+      return Lout;
+#endif
+
     }
-  else
-    {
-      vector<string> data;
-      char tmp[L];
-      char tmps[1000];
-      for(int i = 0; i < obs.nrow(); i++)
-	{
-	  for(int j = 0; j < L; j++)
-	    {
-	      //	      printf("%i", (int)obs(i,j));
-	      sprintf(tmps, "%i", (int)obs(i,j));
-	      tmp[j] = tmps[0];
-	    }
-	  //	  printf("\n");
-	  data.push_back(tmp);
-	  if(_outputinput)
-	    cout << tmp << "\n";
+
+
+
+
+#ifndef _USE_CODE_FOR_R
+    void run_inference_longitudinal(vector<string>& data, vector<int>& data_count, int L, int n_boot, string name, double& time, int rw_boot){
+#else
+      List run_inference_longitudinal(vector<string>& data, vector<int>& data_count, int L, int n_boot, string name, double& time, int rw_boot){
+#endif
+  
+	int itr = 0;
+			     
+	arma::cube mean(L,L,n_boot+1,arma::fill::zeros);
+	arma::cube sd(L,L,n_boot+1,arma::fill::zeros);
+
+	arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
+	arma::vec A_row_ptr(pow(2,L)+1, arma::fill::zeros);
+	arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
+
+	// start with uniform initial guess
+	uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
+
+	// *** do, and time, the inference process
+	auto t1 = std::chrono::high_resolution_clock::now();
+	adapted_baum_welch(A_val, A_row_ptr, A_col_idx, data, data_count, 1000, itr, pow(10, -3), L, false, false);
+	auto t2 = std::chrono::high_resolution_clock::now();
+	double duration_seconds = std::chrono::duration<double>(t2 - t1).count(); //Measure time
+	time += duration_seconds;
+	arma::mat rw(L,L, arma::fill::zeros);
+	random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
+
+#ifndef _USE_CODE_FOR_R
+	graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
+#else
+	CharacterVector Lvizcv = graph_visualization("graph_viz_" + name + ".txt", 10000, A_val, A_row_ptr, A_col_idx, L);
+#endif
+  
+	cout << "Mean ordering matrix from sampling:\n";
+	cout << rw << endl;
+	mean.slice(0) = rw;;
+	sd.slice(0) = rw;
+
+	//Write the maximum likelihood values to file
+	vector<int> n_partners;
+	vector<int> c_partners;
+	vector<int> partners;
+	possible_transitions(n_partners, c_partners, partners, L);
+
+#ifndef _USE_CODE_FOR_R
+	std::ofstream myfile3;
+	myfile3.open("transitions_" + name + ".txt");
+	myfile3 << "From " << "To " << "Probability" << endl;
+	int k = 0, c=0;
+	for(int i=0; i<mypow2(L); i++){
+	  int n_end_vertices = n_partners[i];
+	  int r = A_row_ptr(i);
+	  c = 0;
+	  for(int j=0; j<n_end_vertices; j++){
+	    int j2 = partners[k];
+	    myfile3 << i << " "<< j2 <<" "<< A_val(r+c) << endl;
+	    k ++, c++;
+	  }
+	}
+#else
+
+	// lazily get number of edges we'll need to store -- could use maths result
+	int cube_size = 0;
+	for(int i=0; i<mypow2(L); i++){
+	  cube_size += n_partners[i];
 	}
 
-      infout = run_inference(data, L, _nboot, "", time, _fullsample);
-    }
-  return infout;
-}
+	// vectors for returning edge weight stats
+	NumericVector from_v(cube_size*(n_boot+1)), to_v(cube_size*(n_boot+1)), prob_v(cube_size*(n_boot+1)), flux_v(cube_size*(n_boot+1)), boot_v(cube_size*(n_boot+1));
+
+	// store edge weight stats for the original data
+	int k = 0, c=0;
+	vector<double> stateprobs(mypow2(L));
+	stateprobs[0] = 1;
+
+	int cube_ref = 0;  
+	for(int i=0; i<mypow2(L); i++){
+	  int n_end_vertices = n_partners[i];
+	  int r = A_row_ptr(i);
+	  c = 0;
+	  for(int j=0; j<n_end_vertices; j++){
+	    int j2 = partners[k];
+	    from_v[0*cube_size + cube_ref] = i;
+	    to_v[0*cube_size + cube_ref] = j2;
+	    prob_v[0*cube_size + cube_ref] = A_val(r+c);
+	    flux_v[0*cube_size + cube_ref] = stateprobs[i]*A_val(r+c);
+	    boot_v[0*cube_size + cube_ref] = 0;
+	    stateprobs[j2] += stateprobs[i]*A_val(r+c);
+	    k ++, c++;
+	    cube_ref++;
+	  }
+	}
+#endif
+
+	int outboot;
+	for(int bootref=0; bootref<n_boot; bootref++){
+	  outboot = 0;
+	  if(n_boot < 10) outboot = 1;
+	  else if(bootref % (int)(n_boot/10) == 0) outboot = 1;
+	  if(outboot == 1)
+	    {
+	      cout << "Bootstrap number: " << bootref+1 << "\n";
+	    }
+
+	  // create bootstrap resample
+	  vector<string> new_data = data;
+	  bootstrap2(data, new_data, L);
+
+	  arma::vec A_val(pow(2,L-1)*L, arma::fill::zeros);
+	  arma::vec A_row_ptr(pow(2,L)+1, arma::fill::zeros);
+	  arma::vec A_col_idx(pow(2,L-1)*L, arma::fill::zeros);
+
+	  // start with uniform initial guess
+	  uniform_transition_matrix(A_val, A_row_ptr, A_col_idx, L);
+
+	  // *** do, and time, the inference process
+	  auto t3 = std::chrono::high_resolution_clock::now();
+	  adapted_baum_welch(A_val, A_row_ptr, A_col_idx, new_data, data_count, 1000,itr, pow(10, -3), L, false, false);
+	  auto t4 = std::chrono::high_resolution_clock::now();
+	  double duration_seconds2 = std::chrono::duration<double>(t4 - t3).count(); //Measure time
+	  time += duration_seconds2;
+
+	  // store edge weight stats for this resample
+	  std::fill(stateprobs.begin(), stateprobs.end(), 0);
+	  stateprobs[0] = 1;
+	  k = c = 0;
+	  cube_ref = 0;
+	  for(int i=0; i<mypow2(L); i++){
+	    int n_end_vertices = n_partners[i];
+	    int r = A_row_ptr(i);
+	    c = 0;
+	    for(int j=0; j<n_end_vertices; j++){
+	      int j2 = partners[k];
+	      from_v[bootref*cube_size + cube_ref] = i;
+	      to_v[bootref*cube_size + cube_ref] = j2;
+	      prob_v[bootref*cube_size + cube_ref] = A_val(r+c);
+	      flux_v[bootref*cube_size + cube_ref] = stateprobs[i]*A_val(r+c);
+	      boot_v[bootref*cube_size + cube_ref] = bootref+1;
+	      stateprobs[j2] += stateprobs[i]*A_val(r+c);
+	      k ++, c++;
+	      cube_ref++;
+	    }
+	  }
+ 
+	  if(rw_boot == 1){
+	    arma::mat rw(L,L, arma::fill::zeros);
+	    random_walkers(rw, 10000, A_val, A_row_ptr, A_col_idx, L);
+	    mean.slice(bootref+1) = rw;
+	    sd.slice(bootref+1) = rw;
+	  }
+
+	}
+	arma::mat mean_slices(L,L, arma::fill::zeros);
+	mean_cube_slices(mean, mean_slices, n_boot+1);
+
+	arma::mat sd_slices(L,L, arma::fill::zeros);
+	sd_cube_slices(sd, sd_slices, n_boot+1, mean_slices);
+
+
+#ifndef _USE_CODE_FOR_R
+	std::ofstream myfile;
+	myfile.open("mean_" + name + ".txt");
+
+	for(int m=0; m<L; m++){
+	  for(int n=0; n<L; n++){
+	    myfile << scientific << mean_slices(m,n) << " ";
+	  }
+	  myfile << "\n";
+	}
+#else
+	NumericVector mean_v;
+	NumericVector feature_v;
+	NumericVector order_v;
+	Rprintf("storing means\n");  
+	for(int m=0; m<L; m++){
+	  for(int n=0; n<L; n++){
+	    feature_v.push_back(L-m);
+	    order_v.push_back(n+1);
+	    mean_v.push_back(mean_slices(m,n));
+	  }
+	}
+#endif
+
+#ifndef _USE_CODE_FOR_R
+	std::ofstream myfile2;
+	myfile2.open("sd_" + name + ".txt");
+
+	for(int m=0; m<L; m++){
+	  for(int n=0; n<L; n++){
+	    myfile2 << scientific << sd_slices(m,n) << " ";
+	  }
+	  myfile2 << "\n";
+	}
+#else
+	NumericVector sd_v;
+	Rprintf("storing sds\n");  
+	for(int m=0; m<L; m++){
+	  for(int n=0; n<L; n++){
+	    sd_v.push_back(sd_slices(m,n));
+	  }
+	}
+
+	Rprintf("creating stats\n");  
+	List Lstats = List::create(Named("feature") = feature_v,
+				   Named("order") = order_v,
+				   Named("mean") = mean_v,
+				   Named("sd") = sd_v);
+	DataFrame Lstatsdf(Lstats);
+
+	Rprintf("creating flux\n");  
+	List Lflux = List::create(Named("Bootstrap") = boot_v,
+				  Named("From") = from_v,
+				  Named("To") = to_v,
+				  Named("Probability") = prob_v,
+				  Named("Flux") = flux_v);
+	DataFrame Lfluxdf(Lflux);
+  
+	List Lout = List::create(Named("stats") = Lstatsdf,
+				 Named("transitions") = Lfluxdf,
+				 Named("features") = 0,
+				 Named("viz") = Lvizcv,
+				 Named("L") = L);
+
+	return Lout;
+#endif
+      }
+
+
+
+      /*
+	A function for finding the sum of the elements in a vector of doubles.
+	Input variables:
+	- vector<double> vec: The vector to take the sum of
+	Output:
+	The sum of the vector
+      */
+      double sum_vector(vector<double> vec){
+	double s = 0.;
+	for(int i=0; i<vec.size(); i++){
+	  s += vec[i];
+	}
+	return s;
+      }
+
+      void help(void)
+      {
+	printf("Options [defaults]:\n\n--obs file.txt\t\tobservations file [NA]\n--label labelstring\tString to label file output [[filename]-out]\n--seed N\t\tRandom number seed [1]\n--nboot N\t\tNumber of bootstrap resamples [100]\n--fullsample\t\tSimulate walkers for each resample [0]\n--longitudinal\t\tLongitudinal data [OFF]\n--help\t\t\tDisplay this message\n\n");
+      }
+
+      /*
+	The command line arguments needs to be as follow:
+	data_file_name.txt L number_bootstraps name_output_file cross_sectional rw_bootstrap
+
+	If you just want the maximum likelihood results set number_bootstrap = 0.
+	If you have cross_sectional data set cross_sectional = 1, if longitudinal data set cross_sectional = 0.
+	If you want to add summary data for each bootstrap set rw_bootstrap = 1, else set rw_bootstrap = 0.
+      */
+      int main(int argc, char** argv){
+
+	int L, n_boot, rw_boot;
+	char obsfile[1000];
+	char labelstr[1000];
+	int cross_sectional;
+	int filelabel;
+	int fullsample;
+	int seed;
+	double time;
+	int i;
+	int oldform = 0;
+	vector<string> data;
+	vector<int> data_count;
+  
+	n_boot = 100;
+	fullsample = 0;
+	strcpy(obsfile, "");
+	strcpy(labelstr, "");
+	seed = 1;
+	filelabel = 0;
+	cross_sectional = 1;
+
+	printf("== HyperHMM ==\n\nPlease cite Moen, M.T. and Johnston, I.G., 2023. HyperHMM: efficient inference of evolutionary and progressive dynamics on hypercubic transition graphs. Bioinformatics, 39(1), p.btac803.\n\n");
+
+	if(argc == 7)
+	  {
+	    if(!(atoi(argv[5]) != 0 && atoi(argv[5]) != 1) || atoi(argv[2]) <= 0 || atoi(argv[3]) < 0 || (atoi(argv[6]) != 0 && atoi(argv[6]) != 1)) {
+	      oldform = 1;
+	    }
+	  }
+
+	if(oldform == 1)
+	  {
+	    //    cout << "Usage:\n\t./hyperhmm.ce [datafile] [number of features] [number of bootstrap resamples] [output file label] [cross-sectional data (0 or 1)] [simulate random walkers for each sample (0 or 1)]\n";
+	    // 1 = datafile, 2 = L, 3 = nboot, 4 = output label, 5 = cross-sectional, 6 = walkers for each resample
+	    printf("It looks like you've used the old command-line argument specification, which is preserved for backwards compatibility. The newer format may allow more flexibility:\n");
+	    help();
+	    n_boot = atoi(argv[3]);
+	    rw_boot = atoi(argv[6]);
+	    cross_sectional = atoi(argv[5]);
+	    sprintf(obsfile, "%s", argv[1]);
+	    sprintf(labelstr, "%s", argv[4]);  
+	  }
+	else
+	  {
+	    // deal with command-line arguments
+	
+	    for(i = 1; i < argc; i+=2)
+	      {
+		if(strcmp(argv[i], "--obs\0") == 0) strcpy(obsfile, argv[i+1]);
+		else if(strcmp(argv[i], "--label\0") == 0) { filelabel = 1; strcpy(labelstr, argv[i+1]); }
+		else if(strcmp(argv[i], "--seed\0") == 0) seed = atoi(argv[i+1]);
+		else if(strcmp(argv[i], "--nboot\0") == 0) n_boot = atoi(argv[i+1]);
+		else if(strcmp(argv[i], "--fullsample\0") == 0) { rw_boot = 1; i--; }
+		else if(strcmp(argv[i], "--longitudinal\0") == 0) { cross_sectional = 0; i--; }
+		else if(strcmp(argv[i], "--help\0") == 0) { help(); return 0; }
+		else { printf("Didn't understand argument %s\n", argv[i]); i--; }
+	      }
+	    if(filelabel == 0)
+	      {
+		sprintf(labelstr, "%s-out", obsfile);
+	      }
+	  }
+
+	rng.seed(seed);
+  
+	if(strcmp(obsfile, "") == 0)
+	  {
+	    printf("I need at least an input file!\n\n");
+	    help();
+	    myexit(0);
+	  }
+  
+	// printf("%f %f %f %f\n", random_zero_to_one(), random_zero_to_one(), random_zero_to_one(), random_zero_to_one());
+
+	printf("Attempting to run HyperHMM with the following parameters:\n");
+	printf("  obs: %s\n", obsfile);
+	printf("  cross-sectional: %i\n", cross_sectional);
+	printf("  label: %s\n", labelstr);
+	printf("  seed: %i\n", seed);
+	printf("  nboot: %i\n", n_boot);
+	printf("  fullsample: %i\n\n", rw_boot);
+        
+	if(cross_sectional == 1){
+	  import_data(obsfile, data, &L);
+	  cout << "From " << obsfile << " I read " << data.size() << " entries and am assuming " << L << " features\n\n";
+	  run_inference(data, L, n_boot, labelstr, time, rw_boot);
+	}
+	else if(cross_sectional == 0){
+	  import_data_longitudinal(obsfile, data, data_count, &L);
+	  cout << "From " << obsfile << " I read " << data.size() << " entries and am assuming " << L << " features\n\n";
+	  run_inference_longitudinal(data, data_count, L, n_boot, labelstr, time, rw_boot);
+	}
+
+
+	//cout << "The time it took to run the algorithm with " << n_boot << " bootstrap(s): " << time/(n_boot+1) << endl;
+	//cout << "Average rutime per iteration with " << n_boot << " bootstrap(s): " << time/(n_boot+1) << endl;
+	return 0;
+      }
+
+      List HyperHMM(NumericMatrix obs,
+		    Nullable<NumericMatrix> initialstates,
+		    NumericVector seed,
+		    NumericVector nboot,
+		    NumericVector fullsample,
+		    NumericVector outputinput);
+
+      // [[Rcpp::export]]
+      List HyperHMM(NumericMatrix obs,
+		    Nullable<NumericMatrix> initialstates = R_NilValue,
+		    NumericVector seed = 1,
+		    NumericVector nboot = 100,
+		    NumericVector fullsample = 1,
+		    NumericVector outputinput = 0)
+      {
+	int _longitudinal;
+	int _fullsample = fullsample[0];
+	int _nboot = nboot[0];
+	int _seed = seed[0];
+	int _outputinput = outputinput[0];
+	double time;
+	List infout;
+	int L, ntarg;
+
+	Rprintf("== HyperHMM ==\n\nPlease cite Moen, M.T. and Johnston, I.G., 2023. HyperHMM: efficient inference of evolutionary and progressive dynamics on hypercubic transition graphs. Bioinformatics, 39(1), p.btac803.\n\n");
+
+	if(initialstates.isUsable())
+	  _longitudinal = 1;
+	else
+	  _longitudinal = 0;
+
+	Rprintf("Attempting to run HyperHMM with the following parameters:\n");
+	Rprintf("  cross-sectional: %i\n", 1-_longitudinal);
+	Rprintf("  seed: %i\n", _seed);
+	Rprintf("  nboot: %i\n", _nboot);
+	Rprintf("  fullsample: %i\n\n", _fullsample);
+
+	rng.seed(_seed);
+	L = obs.ncol(); ntarg = obs.nrow();
+	Rprintf("Found %i entries with %i features.\n", ntarg, L);
+	if(_outputinput)
+	  Rprintf("Observations read:\n");
+	if(initialstates.isUsable())
+	  {
+	    NumericMatrix _initialstates(initialstates);
+	    if(_initialstates.ncol() != L || _initialstates.nrow() != ntarg)
+	      {
+		Rprintf("If specifying initial states, we need one initial state for each observation.");
+		myexit(0);
+	      }
+	
+	    vector<string> data;
+	    vector<int> data_count;
+
+	    char tmps[1000];
+  
+	    for(int i = 0; i < obs.nrow(); i++)
+	      {
+		int c;
+		string start = "0";
+		string end = "1";
+		string word;
+		string str;
+
+		for(int j = 0; j < L; j++)
+		  {
+		    sprintf(tmps, "%i", (int)_initialstates(i,j));
+		    str += tmps[0];
+		  }
+		str += ' ';
+		for(int j = 0; j < L; j++)
+		  {
+		    sprintf(tmps, "%i", (int)obs(i,j));
+		    str += tmps[0];
+		  }
+
+		if(_outputinput)
+		  cout << str << "\n";
+
+		int k = 0;
+		if(str.size()>0){
+		  stringstream ss(str);
+		  string token;
+		  while(ss >> token){
+		    if(k==0){
+		      c = count_nr_1(token);
+		      if(c > 0){
+			data.push_back(start);
+		      }
+		      if(c != 1){
+			for(int j1=0; j1<c-1; j1++){
+			  data.push_back("?");
+			}
+		      }
+		      data.push_back(token);
+		      k++;
+		    }
+		    else if(k == 1){
+		      int c2 = count_nr_1(token);
+		      for(int j2=0; j2<c2-c-1; j2++){
+			data.push_back("?");
+		      }
+		      data.push_back(token);
+		      if(c2 < token.size()){
+			for(int j3=c2; j3<L-1; j3++){
+			  data.push_back("?");
+			}
+			data.push_back(end);
+		      }
+		      k = 0;
+		    }
+		  }
+		  data_count.push_back(1);
+		}
+	      }
+            
+	    infout = run_inference_longitudinal(data, data_count, L, _nboot, "", time, _fullsample);
+	  }
+	else
+	  {
+	    vector<string> data;
+	    char tmp[L];
+	    char tmps[1000];
+	    for(int i = 0; i < obs.nrow(); i++)
+	      {
+		for(int j = 0; j < L; j++)
+		  {
+		    //	      printf("%i", (int)obs(i,j));
+		    sprintf(tmps, "%i", (int)obs(i,j));
+		    tmp[j] = tmps[0];
+		  }
+		//	  printf("\n");
+		data.push_back(tmp);
+		if(_outputinput)
+		  cout << tmp << "\n";
+	      }
+
+	    infout = run_inference(data, L, _nboot, "", time, _fullsample);
+	  }
+	return infout;
+      }
 
 
  
