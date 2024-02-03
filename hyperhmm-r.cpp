@@ -1784,7 +1784,24 @@ void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma:
 		    sprintf(tmps, "%i", (int)obs(i,j));
 		    str += tmps[0];
 		  }
-
+		
+		int sum_init = 0, sum_obs = 0;
+		for(int j = 0; j < L; j++)
+		  {
+		    if((int)_initialstates(i,j) == 1 && (int)obs(i,j) == 0)
+		      {
+			cout << "Record " << i << " has a reversible transition\n";
+			myexit(0);
+		      }
+		    if((int)_initialstates(i,j) == 1) sum_init++;
+		    if((int)obs(i,j) == 1) sum_obs++;
+		  }
+		if(sum_init == sum_obs)
+		  {
+		    cout << "Record " << i << " has identical initial and end states\n";
+		    myexit(0);
+		  }
+		
 		if(_outputinput)
 		  cout << str << "\n";
 
