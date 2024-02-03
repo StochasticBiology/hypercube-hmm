@@ -126,6 +126,7 @@ Output and plotting
 | *transitions* | The weights and probability fluxes for each transition between states, for each bootstrap resample and for the original dataset (corresponding to *Bootstrap* == 0 in the data frame) |
 | *features* | Empty by default, to allow for feature names |
 | *viz* | Collection of observed transitions from simulated random walkers, represented as string containing before and after states, for use in sampled visualisation |
+| *L* | The number of features in the system 
 
 Plotting is done in R, using functions in `hypercube-plots.R`. These include "bubble" plots for mean feature orderings, hypercube visualisations illustrating the complete transition network, and ordering graphs showing pairwise acquisition orderings.
 
