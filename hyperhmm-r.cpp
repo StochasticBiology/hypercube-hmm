@@ -1251,11 +1251,11 @@ void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma:
 	  c = 0;
 	  for(int j=0; j<n_end_vertices; j++){
 	    int j2 = partners[k];
-	    from_v[bootref*cube_size + cube_ref] = i;
-	    to_v[bootref*cube_size + cube_ref] = j2;
-	    prob_v[bootref*cube_size + cube_ref] = A_val(r+c);
-	    flux_v[bootref*cube_size + cube_ref] = stateprobs[i]*A_val(r+c);
-	    boot_v[bootref*cube_size + cube_ref] = bootref+1;
+	    from_v[(bootref+1)*cube_size + cube_ref] = i;
+	    to_v[(bootref+1)*cube_size + cube_ref] = j2;
+	    prob_v[(bootref+1)*cube_size + cube_ref] = A_val(r+c);
+	    flux_v[(bootref+1)*cube_size + cube_ref] = stateprobs[i]*A_val(r+c);
+	    boot_v[(bootref+1)*cube_size + cube_ref] = bootref+1;
 	    stateprobs[j2] += stateprobs[i]*A_val(r+c);
 	    cube_ref++;
 	    k ++, c++;
@@ -1484,11 +1484,11 @@ void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma:
 	    c = 0;
 	    for(int j=0; j<n_end_vertices; j++){
 	      int j2 = partners[k];
-	      from_v[bootref*cube_size + cube_ref] = i;
-	      to_v[bootref*cube_size + cube_ref] = j2;
-	      prob_v[bootref*cube_size + cube_ref] = A_val(r+c);
-	      flux_v[bootref*cube_size + cube_ref] = stateprobs[i]*A_val(r+c);
-	      boot_v[bootref*cube_size + cube_ref] = bootref+1;
+	      from_v[(bootref+1)*cube_size + cube_ref] = i;
+	      to_v[(bootref+1)*cube_size + cube_ref] = j2;
+	      prob_v[(bootref+1)*cube_size + cube_ref] = A_val(r+c);
+	      flux_v[(bootref+1)*cube_size + cube_ref] = stateprobs[i]*A_val(r+c);
+	      boot_v[(bootref+1)*cube_size + cube_ref] = bootref+1;
 	      stateprobs[j2] += stateprobs[i]*A_val(r+c);
 	      k ++, c++;
 	      cube_ref++;
