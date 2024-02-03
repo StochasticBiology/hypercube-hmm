@@ -115,10 +115,29 @@ _In R:_
 | `HyperHMM(m.2, initialstates=m.1)` | Longitudinal observations m.1 -> m.2 |
 | `HyperHMM(m, nboot=1000, seed=2)` | As top row with 1000 resamples and random number seed 2 |
 
-Plotting
+Output and plotting
 ------
 
+`HyperHMM` returns a named list with the following elements
+
+| Element | Description |
+|---------|---------|
+| *stats* | "Bubble plot" summary statistics: the mean and bootstrap s.d. of the probability that a feature is acquired at a given ordering step in the accumulation process |
+| *transitions* | The weights and probability fluxes for each transition between states, for each bootstrap resample and for the original dataset (corresponding to *Bootstrap* == 0 in the data frame) |
+| *features* | Empty by default, to allow for feature names |
+| *viz* | Collection of observed transitions from simulated random walkers, represented as string containing before and after states, for use in sampled visualisation |
+
 Plotting is done in R, using functions in `hypercube-plots.R`. These include "bubble" plots for mean feature orderings, hypercube visualisations illustrating the complete transition network, and ordering graphs showing pairwise acquisition orderings.
+
+These include:
+
+| Element | Description | Optional arguments
+|---------|---------|------|
+| `plot.bubbles2` | "Bubble plot" summary statistics: the mean and bootstrap s.d. of the probability that a feature is acquired at a given ordering step in the accumulation process | |
+| `plot.hypercube2` | Visualisation of the hypercubic transition graph | |
+| `plot.pfg` | Visualisation of which feature acquisitions follow which others | |
+| `plot.standard` | Collection of the three above plot types | |
+
 
 Other approaches and manuscript links
 -------
