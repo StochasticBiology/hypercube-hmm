@@ -138,7 +138,7 @@ These include:
 | `plot.hypercube2` | Visualisation of the hypercubic transition graph | |
 | `plot.pfg` | Visualisation of which feature acquisitions follow which others | |
 | `plot.standard` | Collection of the three above plot types | |
-
+| `plot.hypercube.flux` | (Rather improved) visualisation of the hypercubic transition graph -- recommended over the above |
 
 Other approaches and manuscript links
 -------
