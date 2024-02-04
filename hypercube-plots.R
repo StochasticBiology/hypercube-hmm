@@ -417,11 +417,11 @@ plot.hypercube.flux = function(my.post, thresh = 0.05, node.labels = TRUE, use.p
   ### produce hypercube subgraph
   bigL = my.post$L
   if(use.probability == TRUE) {
-    trans.p = my.post$transitions[my.post$transitions$Probability > thresh,]
+    trans.p = my.post$transitions[my.post$transitions$Probability > thresh & my.post$transitions$Bootstrap == 0,]
   } else {
-    trans.p = my.post$transitions[my.post$transitions$Flux > thresh,]
+    trans.p = my.post$transitions[my.post$transitions$Flux > thresh & my.post$transitions$Bootstrap == 0,]
   }
-  trans.g = graph_from_data_frame(trans.p)
+  trans.g = graph_from_data_frame(trans.p[,2:ncol(trans.p)])
   bs = unlist(lapply(as.numeric(V(trans.g)$name), DecToBin, len=bigL))
   V(trans.g)$binname = V(trans.g)$name
   layers = str_count(bs, "1")
