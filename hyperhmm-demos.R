@@ -63,5 +63,5 @@ cgh.raw = readLines("Data/ovarian.txt")
 cgh.mat = do.call(rbind, lapply(strsplit(cgh.raw, ""), as.numeric))
 fit.cgh = HyperHMM(cgh.mat)
 plot.standard(fit.cgh)
-# rather nice hypercube visualisation
+# rather nicer hypercube visualisation
 plot.hypercube.flux(fit.cgh)
