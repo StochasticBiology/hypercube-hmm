@@ -15,6 +15,9 @@ m = matrix(c(0,0,1,0,1,1), byrow=TRUE, ncol=3)
 # do inference
 fitted = HyperHMM(m)
 
+m = matrix(c(0,0,0,0,0,0,0,0,0,0,0,0), byrow=TRUE, ncol=3)
+fitted = HyperHMM(m)
+
 # produce a set of plots. here we use a syntax to demonstrate back-compatibility
 plot.bubs = plot.bubbles2(fitted[[1]], formatted=TRUE)
 plot.cube = plot.hypercube2(fitted[[4]], use.width = T, node.labels=F, seg.labels = T, threshold=0, rotate.phi=F)
@@ -60,3 +63,5 @@ cgh.raw = readLines("Data/ovarian.txt")
 cgh.mat = do.call(rbind, lapply(strsplit(cgh.raw, ""), as.numeric))
 fit.cgh = HyperHMM(cgh.mat)
 plot.standard(fit.cgh)
+# rather nice hypercube visualisation
+plot.hypercube.flux(fit.cgh)
