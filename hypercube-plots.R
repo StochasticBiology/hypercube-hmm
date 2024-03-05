@@ -388,9 +388,16 @@ plot.hypercube2 = function(translist,               # set of transitions
 }
 
 plot.standard = function(fitted) {
-  plot.bubs = plot.bubbles2(fitted[[1]], formatted=TRUE)
-  plot.cube = plot.hypercube2(fitted[[4]], use.width = T, node.labels=F, seg.labels = T, threshold=0, rotate.phi=F)
-  plot.diag = plot.pfg(fitted[[4]], pfg.layout="matrix")
+  if("stats" %in% names(fitted)) { 
+    bubble.src = fitted[["stats"]] 
+    cube.src = fitted[["viz"]]
+  } else {
+    bubble.src = fitted[[1]]
+    cube.src = fitted[[4]]
+  }
+  plot.bubs = plot.bubbles2(bubble.src, formatted=TRUE)
+  plot.cube = plot.hypercube2(cube.src, use.width = T, node.labels=F, seg.labels = T, threshold=0, rotate.phi=F)
+  plot.diag = plot.pfg(cube.src, pfg.layout="matrix")
   # and arrange plots together
   return(ggarrange(plot.bubs, plot.cube, plot.diag, nrow=1))
 }
