@@ -37,9 +37,16 @@ plot.bubbles2 = function(bp,             # output data structure. either just a 
   } else { bp.df = bp; bp.df$prob = bp.df$mean  } 
   ## plot bubbles
   if(is.null(labels)) {
-    g.1 = ggplot(bp.df, aes(x=order, y=feature)) + geom_point(aes(size=prob), colour="#CCCCCC") + theme_classic() + theme(legend.position = "none")
+    g.1 = ggplot(bp.df, aes(x=order, y=feature)) + 
+      geom_point(aes(size=prob), colour="#CCCCCC") + 
+      scale_x_continuous(breaks=1:max(bp.df$order)) + 
+      scale_y_continuous(breaks=1:max(bp.df$feature)) + 
+      theme_classic() + theme(legend.position = "none")
   } else {
-    g.1 = ggplot(bp.df, aes(x=order, y=feature)) + geom_point(aes(size=prob), colour="#CCCCCC") + scale_y_continuous(breaks=length(labels):1, labels=labels) + theme_classic() + theme(legend.position = "none")
+    g.1 = ggplot(bp.df, aes(x=order, y=feature)) + 
+      geom_point(aes(size=prob), colour="#CCCCCC") + 
+      scale_y_continuous(breaks=length(labels):1, labels=labels) + 
+      theme_classic() + theme(legend.position = "none")
   }
   return(g.1)
 }
@@ -387,7 +394,21 @@ plot.hypercube2 = function(translist,               # set of transitions
   return(cube.plot)
 }
 
-plot.standard = function(fitted) {
+plot.standard = function(fitted, legacy=FALSE, label="") {
+  if(legacy == FALSE) {
+    if("stats" %in% names(fitted)) {
+      bubble.src = fitted[["stats"]] 
+      cube.src = fitted[["viz"]]
+      plot.bubs = plot.bubbles2(bubble.src, formatted=TRUE) + ggtitle(label)
+      plot.flux = plot.hypercube.flux(fitted, thresh = 0.02) + 
+        theme(legend.position = "none") 
+      plot.diag = plot.pfg(cube.src, pfg.layout="matrix")
+      plot.standard = ggarrange(plot.flux, plot.bubs, plot.diag, nrow=1) 
+    } else {
+      message("Legacy format used; using legacy plot type")
+      legacy = TRUE
+    }
+  } else {
   if("stats" %in% names(fitted)) { 
     bubble.src = fitted[["stats"]] 
     cube.src = fitted[["viz"]]
@@ -399,7 +420,9 @@ plot.standard = function(fitted) {
   plot.cube = plot.hypercube2(cube.src, use.width = T, node.labels=F, seg.labels = T, threshold=0, rotate.phi=F)
   plot.diag = plot.pfg(cube.src, pfg.layout="matrix")
   # and arrange plots together
-  return(ggarrange(plot.bubs, plot.cube, plot.diag, nrow=1))
+  plot.standard = ggarrange(plot.bubs, plot.cube, plot.diag, nrow=1)
+  } 
+  return(plot.standard)
 }
 
 DecToBin <- function(x, len) {
