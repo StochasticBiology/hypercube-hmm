@@ -1,5 +1,7 @@
 #include <RcppArmadillo.h>
 
+#define VERBOSEDATA 0
+
 // [[Rcpp::depends(RcppArmadillo)]]
 
 // Use the Rcpp namespace to access Rcpp functions
@@ -308,7 +310,7 @@ void possible_transitions(vector<int>& n_partners, vector<int>& cumulative_partn
 void forward_prob(arma::mat& alpha, arma::vec A_val, arma::vec A_row_ptr, arma::vec A_col_idx, vector<string> O, vector<int> n_from, vector<int> c_from, vector<int> from, vector<int> cor_row, vector<int> n_states, vector<int> c_states, vector<int> states){
   int T = O.size();
   double tmp = 0.;
-  int start_state;
+  int start_state = 0;
 
   //Add the initial state value
   //alpha(0,0) = 1.;
@@ -317,6 +319,7 @@ void forward_prob(arma::mat& alpha, arma::vec A_val, arma::vec A_row_ptr, arma::
   int t_start = 0;
   for(int i=0; i<T-1; i++){
     string time_i = O[i];
+    // avoid question marks
     if(time_i.length() > T-3){
       t_start = i;
       start_state = binary2int(time_i, T-1);
@@ -585,6 +588,14 @@ void adapted_baum_welch(arma::vec& A_val, arma::vec A_row_ptr, arma::vec A_col_i
       vector<string> o = std::vector<string>(O.begin() + i*(L+1), O.begin() + (i+1)*L + i+1);
       int n_o = n_O[i];
 
+      if(VERBOSEDATA){
+      if(i == 0) {
+	for(int j = 0; j < o.size(); j++)
+          cout << o[j] << ",";
+	cout << "\n";
+      }
+      }
+      
       auto t_alpha = std::chrono::high_resolution_clock::now();
       forward_prob(alpha, A_val, A_row_ptr, A_col_idx, o, n_from, c_from, from, cor_row, n_states, c_states, states);
       auto t_alpha_end = std::chrono::high_resolution_clock::now();
@@ -1768,8 +1779,9 @@ void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma:
 	    for(int i = 0; i < obs.nrow(); i++)
 	      {
 		int c;
-		string start = "0";
-		string end = "1";
+		string start, end;
+		start.assign(L, '0');
+		end.assign(L, '1');
 		string word;
 		string str;
 
@@ -1841,23 +1853,33 @@ void graph_visualization(string file_name, int n_walkers, arma::vec A_val, arma:
 		  data_count.push_back(1);
 		}
 	      }
-            
+
+	    if(_outputinput) {
+	    for(int i = 0; i < data_count.size(); i++)
+	      {
+		for(int j = 0; j < L+1; j++)
+	          cout << data[i*(L+1) + j] << " -> ";
+		cout << "\n";
+	      }
+	    }
+	    
 	    infout = run_inference_longitudinal(data, data_count, L, _nboot, "", time, _fullsample);
 	  }
 	else
 	  {
 	    vector<string> data;
-	    char tmp[L];
+	    char tmp[L+1];
 	    char tmps[1000];
 	    for(int i = 0; i < obs.nrow(); i++)
 	      {
 		for(int j = 0; j < L; j++)
 		  {
-		    //	      printf("%i", (int)obs(i,j));
+		    //		    printf("%i", (int)obs(i,j));
 		    sprintf(tmps, "%i", (int)obs(i,j));
 		    tmp[j] = tmps[0];
 		  }
-		//	  printf("\n");
+		tmp[L] = '\0';
+		//printf("\n");
 		data.push_back(tmp);
 		if(_outputinput)
 		  cout << tmp << "\n";
