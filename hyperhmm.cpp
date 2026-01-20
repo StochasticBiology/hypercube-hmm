@@ -1515,7 +1515,8 @@ int main(int argc, char** argv){
 	}
       if(filelabel == 0)
 	{
-	  sprintf(labelstr, "%s-out", obsfile);
+	  //sprintf(labelstr, "%s-out", obsfile);
+	  snprintf(labelstr, sizeof(labelstr), "%.*s-out", (int)(sizeof(labelstr) - 5), obsfile);
 	}
     }
 
